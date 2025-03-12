@@ -36,7 +36,7 @@ public class UserLogin {
     private void createAndShowGUI() {
         frame = new JFrame("Firebase Login App");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(600, 450);
+        frame.setSize(600, 455);
 
         cardLayout = new CardLayout();
         mainPanel = new JPanel(cardLayout);
