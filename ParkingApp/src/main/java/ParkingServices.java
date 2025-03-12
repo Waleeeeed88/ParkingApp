@@ -35,4 +35,8 @@ public class ParkingServices {
     public Parking getParking(String id) {
         return parkingSpaces.get(id);
     }
+
+    public Map<String, Parking> getParkingSpaces() {
+        return parkingSpaces; // Return the map of all parking spaces
+    }
 }
