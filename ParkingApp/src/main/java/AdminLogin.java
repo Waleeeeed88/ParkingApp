@@ -2,16 +2,20 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.HashMap;
+import java.util.Map;
 
 public class AdminLogin extends JFrame {
 
-    // *** HARDCODED ADMIN CREDENTIALS (FOR DEMO ONLY - DO NOT USE IN PRODUCTION) ***
-    private static final String ADMIN_EMAIL = "admin@example.com";
-    private static final String ADMIN_PASSWORD = "adminpassword";
-
-    private JTextField adminEmailField;
+    private JTextField adminIdField;
     private JPasswordField adminPasswordField;
     private JButton adminLoginButton;
+    private static Map<String, String> adminAccounts = new HashMap<>(); // Store admin accounts
+
+    // *** TEMPORARY HARDCODED ADMIN ACCOUNT (FOR DEMO ONLY) ***
+    private static final String HARDCODED_ADMIN_ID = "admin";
+    private static final String HARDCODED_ADMIN_PASSWORD = "adminpassword";
+
 
     public AdminLogin() {
         setTitle("Admin Login");
@@ -31,17 +35,17 @@ public class AdminLogin extends JFrame {
         gbc.gridwidth = 2;
         panel.add(adminLoginLabel, gbc);
 
-        JLabel adminEmailLabel = new JLabel("Admin Email:");
+        JLabel adminIdLabel = new JLabel("Admin User ID:");
         gbc.gridx = 0;
         gbc.gridy = 1;
         gbc.gridwidth = 1;
-        panel.add(adminEmailLabel, gbc);
+        panel.add(adminIdLabel, gbc);
 
-        adminEmailField = new JTextField();
-        adminEmailField.setPreferredSize(new Dimension(200, 30));
+        adminIdField = new JTextField();
+        adminIdField.setPreferredSize(new Dimension(200, 30));
         gbc.gridx = 1;
         gbc.gridy = 1;
-        panel.add(adminEmailField, gbc);
+        panel.add(adminIdField, gbc);
 
         JLabel adminPasswordLabel = new JLabel("Admin Password:");
         gbc.gridx = 0;
@@ -63,29 +67,41 @@ public class AdminLogin extends JFrame {
         adminLoginButton.addActionListener(e -> performAdminLogin());
 
         add(panel);
+
+        // Add the hardcoded account to the map *initially*.
+        addHardcodedAdmin();
+    }
+
+    // Method to add admin accounts (used by AdminDashboard)
+    public static void addAdminAccount(String userId, String password) {
+        adminAccounts.put(userId, password); // In real-world, hash the password!
+    }
+
+    private void addHardcodedAdmin() {
+        adminAccounts.put(HARDCODED_ADMIN_ID, HARDCODED_ADMIN_PASSWORD);
     }
 
     private void performAdminLogin() {
-        String email = adminEmailField.getText();
+        String userId = adminIdField.getText();
         String password = new String(adminPasswordField.getPassword());
-        adminPasswordField.setText(null); // Clear the password field
-        adminEmailField.setText(""); // Clear the email field
+        adminPasswordField.setText(null);
+        adminIdField.setText(null);
 
-        // *** VERY BASIC ADMIN CHECK (FOR DEMO ONLY) ***
-        if (email.equals(ADMIN_EMAIL) && password.equals(ADMIN_PASSWORD)) {
+        if (adminAccounts.containsKey(userId) && adminAccounts.get(userId).equals(password)) {
             JOptionPane.showMessageDialog(this, "Admin Login Successful!");
-            // Open Admin Dashboard and pass ParkingServices to it
             ParkingServices parkingServices = new ParkingServices();
-            new AdminDashboard(parkingServices).setVisible(true);
-            dispose(); // Close the admin login window after successful login
+            AdminAccount prototypeAdmin = new AdminAccount("defaultAdmin", "defaultPassword");
+            new AdminDashboard(parkingServices, prototypeAdmin).setVisible(true);
+            dispose();
         } else {
             JOptionPane.showMessageDialog(this, "Invalid Admin Credentials", "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
     public void setVisible(boolean visible) {
-        super.setVisible(visible); // Call the superclass method
+        super.setVisible(visible);
     }
+
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> new AdminLogin().setVisible(true));
