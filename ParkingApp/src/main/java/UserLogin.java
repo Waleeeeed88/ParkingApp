@@ -18,7 +18,7 @@ import java.util.regex.Pattern;
 import org.json.JSONObject;
 
 public class UserLogin {
-    private static final String API_KEY = "\n" +
+    private static final String API_KEY = 
             "AIzaSyAeBBsBEyflDmEmfjwiX7rm0FuILDflss4"; // Replace
     private static final String SIGN_IN_URL = "https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=" + API_KEY;
     private static final String SIGN_UP_URL = "https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=" + API_KEY;
