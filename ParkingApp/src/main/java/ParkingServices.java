@@ -9,17 +9,18 @@ public class ParkingServices {
         parkingSpaces = new HashMap<>();
     }
 
-    public void addParking(String id) {
-        if (!parkingSpaces.containsKey(id)) {
-            parkingSpaces.put(id, new Parking(id));
-            System.out.println("Parking lot added: " + id);
+    // Corrected addParking method to accept ParkingSpace
+    public void addParking(ParkingSpace parking) {  // Changed parameter type
+        if (!parkingSpaces.containsKey(parking.getId())) { // Use getId()
+            parkingSpaces.put(parking.getId(), parking); // Store the ParkingSpace object
+            System.out.println("Parking lot added: " + parking.getId());
         }
     }
 
     public void enableParking(String id) {
         Parking parking = parkingSpaces.get(id);
         if (parking != null) {
-            parking.enableParking();
+            parking.setEnabled(true); // Use the interface method
             System.out.println("Parking lot enabled: " + id);
         }
     }
@@ -27,8 +28,14 @@ public class ParkingServices {
     public void disableParking(String id) {
         Parking parking = parkingSpaces.get(id);
         if (parking != null) {
-            parking.disableParking();
+            parking.setEnabled(false); // Use the interface method
             System.out.println("Parking lot disabled: " + id);
+        }
+    }
+    public void setUnderMaintenance(String id, boolean isUnderMaintenance) {
+        Parking parking = parkingSpaces.get(id);
+        if (parking != null) {
+            parking.setUnderMaintenance(isUnderMaintenance);
         }
     }
 
