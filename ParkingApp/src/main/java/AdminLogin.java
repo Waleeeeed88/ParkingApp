@@ -3,7 +3,6 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
-// Test Line
 public class AdminLogin extends JFrame {
 
     // *** HARDCODED ADMIN CREDENTIALS (FOR DEMO ONLY - DO NOT USE IN PRODUCTION) ***
@@ -69,18 +68,26 @@ public class AdminLogin extends JFrame {
     private void performAdminLogin() {
         String email = adminEmailField.getText();
         String password = new String(adminPasswordField.getPassword());
-        adminPasswordField.setText(null); // Clear the password
+        adminPasswordField.setText(null); // Clear the password field
+        adminEmailField.setText(""); // Clear the email field
 
         // *** VERY BASIC ADMIN CHECK (FOR DEMO ONLY) ***
         if (email.equals(ADMIN_EMAIL) && password.equals(ADMIN_PASSWORD)) {
             JOptionPane.showMessageDialog(this, "Admin Login Successful!");
-            // Open an admin-specific panel/window here (replace this with your admin functionality)
+            // Open Admin Dashboard and pass ParkingServices to it
+            ParkingServices parkingServices = new ParkingServices();
+            new AdminDashboard(parkingServices).setVisible(true);
             dispose(); // Close the admin login window after successful login
         } else {
             JOptionPane.showMessageDialog(this, "Invalid Admin Credentials", "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
+
     public void setVisible(boolean visible) {
         super.setVisible(visible); // Call the superclass method
+    }
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> new AdminLogin().setVisible(true));
     }
 }
