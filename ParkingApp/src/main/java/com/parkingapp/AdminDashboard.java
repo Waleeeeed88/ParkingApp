@@ -293,187 +293,207 @@ class AdminAccount implements AdminAccountPrototype {
         return password;
     }
 }
-//// Interface
-//interface Parking {
-//    String getId();
-//    boolean isEnabled();
-//    void setEnabled(boolean enabled);
-//    boolean isUnderMaintenance();
-//    void setUnderMaintenance(boolean underMaintenance);
-//}
-////parking space interface
-//interface ParkingSpace extends Parking{
-//    String getType();
-//    // Other methods common to all parking spaces
-//}
-//
-//// Concrete classes
-//class StandardSpace implements ParkingSpace {
-//    private String id;
-//    private boolean enabled;
-//    private boolean underMaintenance;
-//
-//    public StandardSpace(String id) {
-//        this.id = id;
-//        this.enabled = true; // Initially enabled
-//        this.underMaintenance = false; // Initially not under maintenance
-//    }
-//
-//    @Override
-//    public String getId() {
-//        return id;
-//    }
-//
-//    @Override
-//    public boolean isEnabled() {
-//        return enabled;
-//    }
-//
-//    @Override
-//    public void setEnabled(boolean enabled) {
-//        this.enabled = enabled;
-//    }
-//
-//    @Override
-//    public boolean isUnderMaintenance() {
-//        return underMaintenance;
-//    }
-//
-//    @Override
-//    public void setUnderMaintenance(boolean underMaintenance) {
-//        this.underMaintenance = underMaintenance;
-//    }
-//
-//    @Override
-//    public String getType() {
-//        return "Standard";
-//    }
-//}
-//class HandicappedSpace implements ParkingSpace {
-//    private String id;
-//    private boolean enabled;
-//    private boolean underMaintenance;
-//
-//    public HandicappedSpace(String id) {
-//        this.id = id;
-//        this.enabled = true; // Initially enabled
-//        this.underMaintenance = false; // Initially not under maintenance
-//    }
-//
-//    @Override
-//    public String getId() {
-//        return id;
-//    }
-//
-//    @Override
-//    public boolean isEnabled() {
-//        return enabled;
-//    }
-//
-//    @Override
-//    public void setEnabled(boolean enabled) {
-//        this.enabled = enabled;
-//    }
-//
-//    @Override
-//    public boolean isUnderMaintenance() {
-//        return underMaintenance;
-//    }
-//
-//    @Override
-//    public void setUnderMaintenance(boolean underMaintenance) {
-//        this.underMaintenance = underMaintenance;
-//    }
-//
-//    @Override
-//    public String getType() {
-//        return "Handicapped";
-//    }
-//}
-//class CompactSpace implements ParkingSpace {
-//    private String id;
-//    private boolean enabled;
-//    private boolean underMaintenance;
-//
-//    public CompactSpace(String id) {
-//        this.id = id;
-//        this.enabled = true;
-//        this.underMaintenance = false;
-//    }
-//    @Override
-//    public String getId() {
-//        return id;
-//    }
-//    @Override
-//    public boolean isEnabled() {
-//        return enabled;
-//    }
-//    @Override
-//    public void setEnabled(boolean enabled) {
-//        this.enabled = enabled;
-//    }
-//    @Override
-//    public boolean isUnderMaintenance() {
-//        return underMaintenance;
-//    }
-//    @Override
-//    public void setUnderMaintenance(boolean underMaintenance) {
-//        this.underMaintenance = underMaintenance;
-//    }
-//    @Override
-//    public String getType() {
-//        return "Compact";
-//    }
-//}
-//class ElectricSpace implements ParkingSpace {
-//    private String id;
-//    private boolean enabled;
-//    private boolean underMaintenance;
-//
-//    public ElectricSpace(String id) {
-//        this.id = id;
-//        this.enabled = true;
-//        this.underMaintenance = false;
-//    }
-//    @Override
-//    public String getId() {
-//        return id;
-//    }
-//    @Override
-//    public boolean isEnabled() {
-//        return enabled;
-//    }
-//    @Override
-//    public void setEnabled(boolean enabled) {
-//        this.enabled = enabled;
-//    }
-//    @Override
-//    public boolean isUnderMaintenance() {
-//        return underMaintenance;
-//    }
-//    @Override
-//    public void setUnderMaintenance(boolean underMaintenance) {
-//        this.underMaintenance = underMaintenance;
-//    }
-//    @Override
-//    public String getType() {
-//        return "Electric";
-//    }
-//}
-//// Factory Method
-//class ParkingSpaceFactory {
-//    public static ParkingSpace createParkingSpace(String id, String type) {
-//        switch (type) {
-//            case "Standard":
-//                return new StandardSpace(id); //pass id
-//            case "Handicapped":
-//                return new HandicappedSpace(id); //pass id
-//            case "Compact":
-//                return new CompactSpace(id); //pass id
-//            case "Electric":
-//                return new ElectricSpace(id); //pass id
-//            default:
-//                return null; // Or throw an exception
-//        }
-//    }
-//}
+
+// Interface
+interface Parking {
+    String getId();
+    boolean isEnabled();
+    void setEnabled(boolean enabled);
+    boolean isUnderMaintenance();
+    void setUnderMaintenance(boolean underMaintenance);
+}
+
+// Parking space interface
+interface ParkingSpace extends Parking {
+    String getType();
+    // Other methods common to all parking spaces
+}
+
+// Concrete classes
+class StandardSpace implements ParkingSpace {
+    private String id;
+    private boolean enabled;
+    private boolean underMaintenance;
+
+    public StandardSpace(String id) {
+        this.id = id;
+        this.enabled = true; // Initially enabled
+        this.underMaintenance = false; // Initially not under maintenance
+    }
+
+    @Override
+    public String getId() {
+        return id;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    @Override
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
+    }
+
+    @Override
+    public boolean isUnderMaintenance() {
+        return underMaintenance;
+    }
+
+    @Override
+    public void setUnderMaintenance(boolean underMaintenance) {
+        this.underMaintenance = underMaintenance;
+    }
+
+    @Override
+    public String getType() {
+        return "Standard";
+    }
+}
+
+class HandicappedSpace implements ParkingSpace {
+    private String id;
+    private boolean enabled;
+    private boolean underMaintenance;
+
+    public HandicappedSpace(String id) {
+        this.id = id;
+        this.enabled = true; // Initially enabled
+        this.underMaintenance = false; // Initially not under maintenance
+    }
+
+    @Override
+    public String getId() {
+        return id;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    @Override
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
+    }
+
+    @Override
+    public boolean isUnderMaintenance() {
+        return underMaintenance;
+    }
+
+    @Override
+    public void setUnderMaintenance(boolean underMaintenance) {
+        this.underMaintenance = underMaintenance;
+    }
+
+    @Override
+    public String getType() {
+        return "Handicapped";
+    }
+}
+
+class CompactSpace implements ParkingSpace {
+    private String id;
+    private boolean enabled;
+    private boolean underMaintenance;
+
+    public CompactSpace(String id) {
+        this.id = id;
+        this.enabled = true;
+        this.underMaintenance = false;
+    }
+
+    @Override
+    public String getId() {
+        return id;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    @Override
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
+    }
+
+    @Override
+    public boolean isUnderMaintenance() {
+        return underMaintenance;
+    }
+
+    @Override
+    public void setUnderMaintenance(boolean underMaintenance) {
+        this.underMaintenance = underMaintenance;
+    }
+
+    @Override
+    public String getType() {
+        return "Compact";
+    }
+}
+
+class ElectricSpace implements ParkingSpace {
+    private String id;
+    private boolean enabled;
+    private boolean underMaintenance;
+
+    public ElectricSpace(String id) {
+        this.id = id;
+        this.enabled = true;
+        this.underMaintenance = false;
+    }
+
+    @Override
+    public String getId() {
+        return id;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    @Override
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
+    }
+
+    @Override
+    public boolean isUnderMaintenance() {
+        return underMaintenance;
+    }
+
+    @Override
+    public void setUnderMaintenance(boolean underMaintenance) {
+        this.underMaintenance = underMaintenance;
+    }
+
+    @Override
+    public String getType() {
+        return "Electric";
+    }
+}
+
+// Factory Method
+class ParkingSpaceFactory {
+    public static ParkingSpace createParkingSpace(String id, String type) {
+        switch (type) {
+            case "Standard":
+                return new StandardSpace(id); // Pass id
+            case "Handicapped":
+                return new HandicappedSpace(id); // Pass id
+            case "Compact":
+                return new CompactSpace(id); // Pass id
+            case "Electric":
+                return new ElectricSpace(id); // Pass id
+            default:
+                return null; // Or throw an exception
+        }
+    }
+}
+
+
