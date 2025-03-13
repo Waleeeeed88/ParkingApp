@@ -118,7 +118,7 @@ class ParkingSpace implements ParkingComponent {
     }
 }
 
-// Sensor Class (Handles Car Detection and Booking Verification)
+// Sensor Class (Handles Car Detection and Booking Verification for deposit)
 class Sensor {
     private ParkingSpace parkingSpace;
     private static final Random random = new Random();
