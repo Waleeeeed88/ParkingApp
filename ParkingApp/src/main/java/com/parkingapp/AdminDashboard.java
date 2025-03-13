@@ -143,7 +143,7 @@ public class AdminDashboard extends JFrame {
         }
     }
 
-
+    
     private void addParkingLot() {
         String id = JOptionPane.showInputDialog(this, "Enter Parking Lot ID:");
         if (id != null && !id.trim().isEmpty()) {
