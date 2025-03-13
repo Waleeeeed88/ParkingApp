@@ -1,4 +1,3 @@
-package com.parkingapp;
 import java.util.HashMap;
 import java.util.Map;
 
