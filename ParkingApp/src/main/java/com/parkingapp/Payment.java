@@ -21,9 +21,8 @@ public class Payment extends JFrame {
     private JLabel balanceLabel;
     private JButton payButton;
     private JPanel cardPanel, bankPanel, paypalPanel;
-    private double userBalance = 0.0; // Assume user balance is initially 0.0
-
-    private String userEmail; // Store the user's email
+    private double userBalance = 0.0;
+    private String userEmail;
 
     public Payment(String userEmail) {
         this.userEmail = userEmail;
@@ -69,16 +68,13 @@ public class Payment extends JFrame {
 
         mainPanel.add(inputPanel, BorderLayout.NORTH);
 
-        // Card Panel
         cardPanel = createCardPanel();
         mainPanel.add(cardPanel, BorderLayout.CENTER);
 
-        // Bank Panel
         bankPanel = createBankPanel();
         mainPanel.add(bankPanel, BorderLayout.CENTER);
         bankPanel.setVisible(false);
 
-        // PayPal Panel
         paypalPanel = createPayPalPanel();
         mainPanel.add(paypalPanel, BorderLayout.CENTER);
         paypalPanel.setVisible(false);
@@ -161,6 +157,10 @@ public class Payment extends JFrame {
         double amount;
         try {
             amount = Double.parseDouble(transactionAmountField.getText());
+            if (amount <= 0) {
+                JOptionPane.showMessageDialog(this, "Amount must be greater than zero.", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
         } catch (NumberFormatException e) {
             JOptionPane.showMessageDialog(this, "Invalid amount.", "Error", JOptionPane.ERROR_MESSAGE);
             return;
@@ -171,29 +171,18 @@ public class Payment extends JFrame {
         paymentDetails.put("Amount", String.valueOf(amount));
         paymentDetails.put("User Email", userEmail);
 
+        PaymentStrategy strategy = null;
         if (paymentType.equals("Debit/Credit Card")) {
-            paymentDetails.put("Card Number", cardNumberField.getText());
-            paymentDetails.put("Expiry Date", expiryDateField.getText());
-            paymentDetails.put("CVV", cvvField.getText());
-            paymentDetails.put("Cardholder Name", cardholderNameField.getText());
-            paymentDetails.put("Province", provinceField.getText());
-            paymentDetails.put("Postal Code", postalCodeField.getText());
-            paymentDetails.put("Billing Address", billingAddressField.getText());
+            strategy = new CreditCardPayment();
         } else if (paymentType.equals("Bank Transfer")) {
-            paymentDetails.put("Recipient Name", recipientNameField.getText());
-            paymentDetails.put("Bank Name", bankNameField.getText());
-            paymentDetails.put("Transit Number", transitNumberField.getText());
-            paymentDetails.put("Institution Number", institutionNumberField.getText());
-            paymentDetails.put("Account Number", accountNumberField.getText());
+            strategy = new BankTransferPayment();
         } else if (paymentType.equals("PayPal")) {
-            paymentDetails.put("PayPal Username", paypalUsernameField.getText());
-            paymentDetails.put("PayPal Email", paypalEmailField.getText());
+            strategy = new PayPalPayment();
         }
 
-        writePaymentToCSV(paymentDetails);
-        userBalance += amount;
-        balanceLabel.setText("Balance: $" + userBalance);
-        JOptionPane.showMessageDialog(this, "Payment successful!", "Success", JOptionPane.INFORMATION_MESSAGE);
+        if (strategy != null) {
+            strategy.processPayment(paymentDetails, amount, this);
+        }
     }
 
     private void writePaymentToCSV(Map<String, String> paymentDetails) {
@@ -202,7 +191,7 @@ public class Payment extends JFrame {
             for (String value : paymentDetails.values()) {
                 line.append(value).append(",");
             }
-            line.deleteCharAt(line.length() - 1); // Remove the trailing comma
+            line.deleteCharAt(line.length() - 1);
             writer.write(line.toString());
             writer.newLine();
         } catch (IOException e) {
@@ -211,7 +200,35 @@ public class Payment extends JFrame {
         }
     }
 
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> new Payment("test@example.com")); // Example email
+    // Strategy Pattern: Payment Strategy Interface
+    interface PaymentStrategy {
+        void processPayment(Map<String, String> paymentDetails, double amount, Payment payment);
+    }
+
+    // Concrete Strategy: Credit Card Payment
+    class CreditCardPayment implements PaymentStrategy {
+        @Override
+        public void processPayment(Map<String, String> paymentDetails, double amount, Payment payment) {
+            JOptionPane.showMessageDialog(payment, "Credit Card Payment of $" + amount + " Successful.");
+            payment.writePaymentToCSV(paymentDetails);
+        }
+    }
+
+    // Concrete Strategy: Bank Transfer Payment
+    class BankTransferPayment implements PaymentStrategy {
+        @Override
+        public void processPayment(Map<String, String> paymentDetails, double amount, Payment payment) {
+            JOptionPane.showMessageDialog(payment, "Bank Transfer Payment of $" + amount + " Successful.");
+            payment.writePaymentToCSV(paymentDetails);
+        }
+    }
+
+    // Concrete Strategy: PayPal Payment
+    class PayPalPayment implements PaymentStrategy {
+        @Override
+        public void processPayment(Map<String, String> paymentDetails, double amount, Payment payment) {
+            JOptionPane.showMessageDialog(payment, "PayPal Payment of $" + amount + " Successful.");
+            payment.writePaymentToCSV(paymentDetails);
+        }
     }
 }
