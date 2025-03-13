@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 //package com.parkingapp;
 //import javax.swing.*;
 //import java.awt.*;
@@ -478,7 +478,7 @@
 //        }
 //    }
 //}
-=======
+
 package com.parkingapp;
 import javax.swing.*;
 import java.awt.*;
