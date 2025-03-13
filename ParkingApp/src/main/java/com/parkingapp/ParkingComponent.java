@@ -1,0 +1,182 @@
+package com.parkingapp;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+
+// Component Interface
+interface ParkingComponent {
+    String getId();
+    void enable();
+    void disable();
+}
+
+// Composite Class (ParkingLot)
+class ParkingLot implements ParkingComponent {
+    private String id;
+    private List<ParkingComponent> parkingSpaces;
+    private boolean enabled;
+
+    public ParkingLot(String id) {
+        this.id = id;
+        this.parkingSpaces = new ArrayList<>();
+        this.enabled = true; // Initially enabled
+        initializeParkingSpaces(); // Ensure 100 parking spaces
+    }
+
+    // Initialize Parking Lot with 100 Parking Spaces
+    private void initializeParkingSpaces() {
+        for (int i = 1; i <= 100; i++) {
+            parkingSpaces.add(new ParkingSpace(id + "-S" + i, "Regular"));
+        }
+    }
+
+    public void add(ParkingComponent component) {
+        System.out.println("Cannot manually add parking spaces! Each lot is initialized with 100 spaces.");
+    }
+
+    public void remove(ParkingComponent component) {
+        System.out.println("Cannot manually remove parking spaces! Each lot is fixed.");
+    }
+
+    public List<ParkingComponent> getParkingSpaces() {
+        return parkingSpaces;
+    }
+
+    @Override
+    public String getId() {
+        return id;
+    }
+
+    @Override
+    public void enable() {
+        this.enabled = true;
+        for (ParkingComponent space : parkingSpaces) {
+            space.enable();
+        }
+    }
+
+    @Override
+    public void disable() {
+        this.enabled = false;
+        for (ParkingComponent space : parkingSpaces) {
+            space.disable();
+        }
+    }
+}
+
+
+// Leaf Class (ParkingSpace)
+class ParkingSpace implements ParkingComponent {
+    private String id;
+    private String type;
+    private boolean enabled;
+    private boolean occupied;
+    private Sensor sensor;
+
+    public ParkingSpace(String id, String type) {
+        this.id = id;
+        this.type = type;
+        this.enabled = true; // Initially enabled
+        this.occupied = false;
+        this.sensor = new Sensor(this);
+    }
+
+    @Override
+    public String getId() {
+        return id;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    @Override
+    public void enable() {
+        this.enabled = true;
+    }
+
+    @Override
+    public void disable() {
+        this.enabled = false;
+    }
+
+
+    public boolean isOccupied() {
+        return occupied;
+    }
+
+    // Simulating a car entering the parking space
+    public void carEnters(String carPlate) {
+        if (!enabled ) {
+            System.out.println("Parking Space " + id + " is not available.");
+            return;
+        }
+        if (!occupied) {
+            occupied = true;
+            sensor.detectCar(carPlate);
+        } else {
+            System.out.println("Parking Space " + id + " is already occupied.");
+        }
+    }
+
+    // Simulating a car leaving the parking space
+    public void carLeaves() {
+        if (occupied) {
+            occupied = false;
+            System.out.println("Parking Space " + id + " is now available.");
+        } else {
+            System.out.println("Parking Space " + id + " was already vacant.");
+        }
+    }
+}
+
+// Sensor Class (Handles Car Detection and Booking Verification)
+class Sensor {
+    private ParkingSpace parkingSpace;
+    private static final Random random = new Random();
+
+    public Sensor(ParkingSpace parkingSpace) {
+        this.parkingSpace = parkingSpace;
+    }
+
+    // Simulating Car Detection
+    public void detectCar(String carPlate) {
+        System.out.println("Sensor detected car: " + carPlate + " in " + parkingSpace.getId());
+
+        // Simulating verification of booking
+        boolean hasValidBooking = random.nextBoolean(); // Randomly simulating booking status
+        if (hasValidBooking) {
+            //processDepositReturn(carPlate);
+        } else {
+            System.out.println("Warning: Car " + carPlate + " does not have a valid booking.");
+        }
+    }
+}
+
+//// Main Class (Client)
+//public class ParkingSystem {
+//    public static void main(String[] args) {
+//        // Create a parking lot
+//        ParkingLot lot1 = new ParkingLot("Downtown Lot");
+//
+//        // Get some parking spaces
+//        ParkingSpace space1 = (ParkingSpace) lot1.getParkingSpaces().get(0);
+//        ParkingSpace space2 = (ParkingSpace) lot1.getParkingSpaces().get(1);
+//
+//        // Simulating a car entering and leaving
+//        space1.carEnters("ABC-123");
+//        space1.carLeaves();
+//
+//        space2.carEnters("XYZ-789");
+//        space2.carLeaves();
+//
+//        // Setting maintenance mode for a space
+//        space1.setUnderMaintenance(true);
+//        space1.carEnters("DEF-456");
+//
+//        // Disabling a parking lot
+//        lot1.disable();
+//        space2.carEnters("GHI-999");
+//    }
+//}

@@ -12,14 +12,14 @@ public class ParkingServices {
     }
 
     // Corrected addParking method to accept ParkingSpace
-    public void addParking(ParkingSpace parking) {  // Changed parameter type
+    public void addParkingLot(ParkingSpace parking) {  // Changed parameter type
         if (!parkingSpaces.containsKey(parking.getId())) { // Use getId()
             parkingSpaces.put(parking.getId(), parking); // Store the ParkingSpace object
             System.out.println("Parking lot added: " + parking.getId());
         }
     }
 
-    public void enableParking(String id) {
+    public void enableParkingLot(String id) {
         Parking parking = parkingSpaces.get(id);
         if (parking != null) {
             parking.setEnabled(true); // Use the interface method
@@ -27,19 +27,15 @@ public class ParkingServices {
         }
     }
 
-    public void disableParking(String id) {
+    public void disableParkingLot(String id) {
         Parking parking = parkingSpaces.get(id);
         if (parking != null) {
             parking.setEnabled(false); // Use the interface method
             System.out.println("Parking lot disabled: " + id);
         }
     }
-    public void setUnderMaintenance(String id, boolean isUnderMaintenance) {
-        Parking parking = parkingSpaces.get(id);
-        if (parking != null) {
-            parking.setUnderMaintenance(isUnderMaintenance);
-        }
-    }
+    
+    //do implementation of enable parkingSpace and disable parkingSpace
 
     public Parking getParking(String id) {
         return parkingSpaces.get(id);
