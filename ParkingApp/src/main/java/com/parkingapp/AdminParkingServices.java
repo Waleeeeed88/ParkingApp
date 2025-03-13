@@ -1,0 +1,131 @@
+package com.parkingapp;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import java.util.List;
+
+public class AdminParkingServices {
+    private JFrame frame;
+    private JComboBox<String> lotSelector;
+    private JComboBox<String> spaceSelector;
+    private JTextField lotNameField;
+    private JButton addLotButton, enableLotButton, disableLotButton;
+    private JButton enableSpaceButton, disableSpaceButton;
+    private DefaultComboBoxModel<String> lotModel;
+    private DefaultComboBoxModel<String> spaceModel;
+    private ArrayList<ParkingLot> parkingLots;
+
+    public AdminParkingServices() {
+        parkingLots = new ArrayList<>();
+        frame = new JFrame("Parking Services");
+        frame.setSize(500, 400);
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setLayout(new GridLayout(3, 1));
+
+        // Panel for Parking Lots
+        JPanel lotPanel = new JPanel();
+        lotPanel.setLayout(new GridLayout(3, 2));
+        lotPanel.setBorder(BorderFactory.createTitledBorder("Parking Lot Management"));
+
+        lotModel = new DefaultComboBoxModel<>();
+        lotSelector = new JComboBox<>(lotModel);
+        lotPanel.add(new JLabel("Select Parking Lot"));
+        lotPanel.add(lotSelector);
+
+        enableLotButton = new JButton("Enable Lot");
+        disableLotButton = new JButton("Disable Lot");
+        lotPanel.add(enableLotButton);
+        lotPanel.add(disableLotButton);
+
+        lotNameField = new JTextField();
+        addLotButton = new JButton("Add New Lot");
+        lotPanel.add(lotNameField);
+        lotPanel.add(addLotButton);
+
+        frame.add(lotPanel);
+
+        // Panel for Parking Spaces
+        JPanel spacePanel = new JPanel();
+        spacePanel.setLayout(new GridLayout(2, 2));
+        spacePanel.setBorder(BorderFactory.createTitledBorder("Parking Space Management"));
+
+        spaceModel = new DefaultComboBoxModel<>();
+        spaceSelector = new JComboBox<>(spaceModel);
+        spacePanel.add(new JLabel("Select Parking Space"));
+        spacePanel.add(spaceSelector);
+
+        enableSpaceButton = new JButton("Enable Space");
+        disableSpaceButton = new JButton("Disable Space");
+        spacePanel.add(enableSpaceButton);
+        spacePanel.add(disableSpaceButton);
+
+        frame.add(spacePanel);
+
+        addEventHandlers();
+        frame.setVisible(true);
+    }
+
+    private void addEventHandlers() {
+        addLotButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String lotName = lotNameField.getText().trim();
+                if (!lotName.isEmpty()) {
+                    ParkingLot newLot = new ParkingLot(lotName);
+                    parkingLots.add(newLot);
+                    lotModel.addElement(lotName);
+                    lotNameField.setText("");
+                    updateSpaceSelector();
+                }
+            }
+        });
+
+        enableLotButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                int index = lotSelector.getSelectedIndex();
+                if (index >= 0) {
+                    parkingLots.get(index).enable();
+                }
+            }
+        });
+
+        disableLotButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                int index = lotSelector.getSelectedIndex();
+                if (index >= 0) {
+                    parkingLots.get(index).disable();
+                }
+            }
+        });
+
+        lotSelector.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                updateSpaceSelector();
+            }
+        });
+    }
+
+    private void updateSpaceSelector() {
+        spaceModel.removeAllElements();
+        int index = lotSelector.getSelectedIndex();
+        if (index >= 0) {
+            ParkingLot selectedLot = parkingLots.get(index);
+            List<ParkingComponent> spaces = selectedLot.getParkingSpaces();
+            for (ParkingComponent space : spaces) {
+                if (space instanceof ParkingSpace) {
+                    spaceModel.addElement(space.getId());
+                }
+            }
+        }
+    }
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> new AdminParkingServices());
+    }
+}
