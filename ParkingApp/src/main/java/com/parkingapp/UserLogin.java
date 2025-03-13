@@ -1,32 +1,42 @@
 package com.parkingapp;
 
-import service.FirebaseService;
+import com.google.auth.oauth2.GoogleCredentials;
+import com.google.firebase.FirebaseApp;
+import com.google.firebase.FirebaseOptions;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseAuthException;
+import com.google.firebase.auth.UserRecord;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.*;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.regex.Pattern;
+import org.json.JSONObject;
 
 public class UserLogin {
+    private static final String API_KEY =
+            "AIzaSyAeBBsBEyflDmEmfjwiX7rm0FuILDflss4"; // Replace
+    private static final String SIGN_IN_URL = "https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=" + API_KEY;
+    private static final String SIGN_UP_URL = "https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=" + API_KEY;
+
     private JFrame frame;
     private CardLayout cardLayout;
     private JPanel mainPanel;
     private JTextField emailField, regEmailField;
     private JPasswordField passwordField, regPasswordField;
-    private FirebaseService firebaseService;
 
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(UserLogin::new);
-    }
-
-    public UserLogin() {
-        firebaseService = new FirebaseService();
-        createAndShowGUI();
+        SwingUtilities.invokeLater(() -> new UserLogin().createAndShowGUI());
     }
 
     private void createAndShowGUI() {
         frame = new JFrame("Firebase Login App");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(600, 455);
+        frame.setSize(600, 450);
 
         cardLayout = new CardLayout();
         mainPanel = new JPanel(cardLayout);
@@ -45,6 +55,7 @@ public class UserLogin {
         gbc.insets = new Insets(10, 10, 10, 10);
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
+        // ... (rest of the login panel setup - labels, fields, etc. - same as before) ...
         JLabel loginLabel = new JLabel("Login");
         loginLabel.setFont(new Font("Arial", Font.BOLD, 28));
         gbc.gridx = 0;
@@ -92,8 +103,6 @@ public class UserLogin {
         gbc.gridy = 5;
         gbc.gridwidth = 2;
         panel.add(goToAdminLoginButton, gbc);
-
-        // Action Listeners for Buttons
         loginButton.addActionListener(e -> performLogin());
         goToRegisterButton.addActionListener(e -> cardLayout.show(mainPanel, "register"));
         goToAdminLoginButton.addActionListener(e -> new AdminLogin().setVisible(true));
@@ -102,8 +111,9 @@ public class UserLogin {
     }
 
     private JPanel createRegisterPanel() {
+        // ... (register panel setup - same as before) ...
         JPanel panel = new JPanel(new GridBagLayout());
-        GridBagConstraints gbc = new GridBagConstraints();
+        GridBagConstraints gbc = new GridBagConstraints(); // Create a new GBC instance
         gbc.insets = new Insets(10, 10, 10, 10);
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
@@ -149,73 +159,149 @@ public class UserLogin {
         gbc.gridwidth = 2;
         panel.add(backToLoginButton, gbc);
 
-        // Action Listeners for Buttons
         registerButton.addActionListener(e -> performRegistration());
         backToLoginButton.addActionListener(e -> cardLayout.show(mainPanel, "login"));
 
         return panel;
     }
 
+    private boolean isValidEmail(String email) {
+        String emailRegex = "^[A-Za-z0-9+_.-]+@(.+)$";
+        Pattern pattern = Pattern.compile(emailRegex);
+        return pattern.matcher(email).matches();
+    }
     private void performLogin() {
         String email = emailField.getText();
         String password = new String(passwordField.getPassword());
+        passwordField.setText(null);
 
-        if (email.isEmpty() || password.isEmpty()) {
-            JOptionPane.showMessageDialog(frame, "Please enter email and password.", "Error", JOptionPane.ERROR_MESSAGE);
+        if (!isValidEmail(email) || password.isEmpty()) {
+            JOptionPane.showMessageDialog(frame, "Please enter a valid email and password", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
-        new SwingWorker<String, Void>() {
+        new SwingWorker<String, Void>() { // Changed to return the idToken
             @Override
-            protected String doInBackground() {
-                return firebaseService.loginUser(email, password);
+            protected String doInBackground() throws Exception {
+                try {
+                    String response = signIn(email, password);
+                    JSONObject jsonResponse = new JSONObject(response);
+                    if (jsonResponse.has("idToken")) {
+                        return jsonResponse.getString("idToken"); // Return the idToken
+                    } else if (jsonResponse.has("error")) {
+                        handleFirebaseError(jsonResponse);
+                        return null; // Return null on error
+                    }
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                    JOptionPane.showMessageDialog(frame, "Login Failed: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                }
+                return null; // Return null on exception
             }
 
             @Override
             protected void done() {
                 try {
-                    String response = get();
-                    if (response.contains("idToken")) {
-                        JOptionPane.showMessageDialog(frame, "Login Successful!");
-                        frame.dispose();
-                        new BookingPage().setVisible(true);
-                    } else {
-                        JOptionPane.showMessageDialog(frame, response, "Error", JOptionPane.ERROR_MESSAGE);
+                    String idToken = get(); // Get the result of doInBackground
+                    if (idToken != null) {
+                        // *** Successful user login - Open BookingPage ***
+                        frame.dispose(); // Close the login window
+                        new BookingPage().setVisible(true); // Open the booking page
+
                     }
-                } catch (Exception e) {
-                    e.printStackTrace();
+                } catch (Exception ex) {
+                    ex.printStackTrace(); // Handle exceptions from get()
                 }
             }
         }.execute();
     }
-
     private void performRegistration() {
         String email = regEmailField.getText();
         String password = new String(regPasswordField.getPassword());
+        regPasswordField.setText(null);
 
-        if (email.isEmpty() || password.length() < 6) {
-            JOptionPane.showMessageDialog(frame, "Invalid email or password.", "Error", JOptionPane.ERROR_MESSAGE);
+        if (!isValidEmail(email) || password.isEmpty()) {
+            JOptionPane.showMessageDialog(frame, "Please enter a valid email and password", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        if (password.length() < 6) {
+            JOptionPane.showMessageDialog(frame, "Password must be at least 6 characters long.", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
-        new SwingWorker<String, Void>() {
+        new SwingWorker<Void, Void>() {
             @Override
-            protected String doInBackground() {
-                return firebaseService.registerUser(email, password);
-            }
-
-            @Override
-            protected void done() {
+            protected Void doInBackground() throws Exception {
                 try {
-                    String response = get();
-                    JOptionPane.showMessageDialog(frame, response);
-                    if (response.contains("successfully")) {
-                        cardLayout.show(mainPanel, "login");
+                    String response = signUp(email, password);
+                    JSONObject jsonResponse = new JSONObject(response);
+                    if (jsonResponse.has("idToken")) {
+                        SwingUtilities.invokeLater(() -> {
+                            JOptionPane.showMessageDialog(frame, "Registration Successful! You can now log in.");
+                            cardLayout.show(mainPanel, "login");
+                        });
+                    } else if (jsonResponse.has("error")) {
+                        handleFirebaseError(jsonResponse);
                     }
-                } catch (Exception e) {
-                    e.printStackTrace();
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                    SwingUtilities.invokeLater(() -> {
+                        JOptionPane.showMessageDialog(frame, "Registration Failed: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                    });
                 }
+                return null;
             }
         }.execute();
+    }
+    private void handleFirebaseError(JSONObject jsonResponse) {
+        JSONObject error = jsonResponse.getJSONObject("error");
+        String message = error.getString("message");
+        JOptionPane.showMessageDialog(frame, "Firebase Error: " + message, "Error", JOptionPane.ERROR_MESSAGE);
+    }
+    private String signIn(String email, String password) throws IOException {
+        URL url = new URL(SIGN_IN_URL);
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("POST");
+        conn.setRequestProperty("Content-Type", "application/json");
+        conn.setDoOutput(true);
+
+        String jsonInputString = "{\"email\":\"" + email + "\",\"password\":\"" + password + "\",\"returnSecureToken\":true}";
+        try (OutputStream os = conn.getOutputStream()) {
+            byte[] input = jsonInputString.getBytes("utf-8");
+            os.write(input, 0, input.length);
+        }
+
+        return getResponse(conn);
+    }
+    private String signUp(String email, String password) throws IOException {
+        URL url = new URL(SIGN_UP_URL);
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("POST");
+        conn.setRequestProperty("Content-Type", "application/json");
+        conn.setDoOutput(true);
+
+        String jsonInputString = "{\"email\":\"" + email + "\",\"password\":\"" + password + "\",\"returnSecureToken\":true}";
+        try (OutputStream os = conn.getOutputStream()) {
+            byte[] input = jsonInputString.getBytes("utf-8");
+            os.write(input, 0, input.length);
+        }
+
+        return getResponse(conn);
+    }
+
+    private String getResponse(HttpURLConnection conn) throws IOException {
+        int responseCode = conn.getResponseCode();
+        BufferedReader br;
+        if (responseCode == HttpURLConnection.HTTP_OK) {
+            br = new BufferedReader(new InputStreamReader(conn.getInputStream(), "utf-8"));
+        } else {
+            br = new BufferedReader(new InputStreamReader(conn.getErrorStream(), "utf-8"));
+        }
+        StringBuilder response = new StringBuilder();
+        String responseLine;
+        while ((responseLine = br.readLine()) != null) {
+            response.append(responseLine.trim());
+        }
+        return response.toString();
     }
 }
