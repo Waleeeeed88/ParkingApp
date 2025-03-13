@@ -28,20 +28,6 @@
         </dependency>
         
         
-        <!-- Spring Boot Starter (if using Spring Boot) -->
-	    <dependency>
-	        <groupId>org.springframework.boot</groupId>
-	        <artifactId>spring-boot-starter</artifactId>
-	        <version>3.2.1</version> <!-- Check the latest version -->
-	    </dependency>
-	    
-	    <!-- Spring Context (if not using Spring Boot) -->
-	    <dependency>
-	        <groupId>org.springframework</groupId>
-	        <artifactId>spring-context</artifactId>
-	        <version>6.1.2</version> <!-- Check the latest version -->
-	    </dependency>
-	        
         <!-- dependency to implement firebase db store -->
         
         <!-- <dependency>
