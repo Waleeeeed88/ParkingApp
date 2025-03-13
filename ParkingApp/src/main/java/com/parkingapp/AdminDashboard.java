@@ -1,4 +1,3 @@
-package com.parkingapp;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
