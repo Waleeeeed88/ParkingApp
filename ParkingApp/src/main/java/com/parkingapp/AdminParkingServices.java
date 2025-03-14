@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class AdminParkingServices {
+    private ParkingServices parkingServices; // Instance of ParkingServices
     private JFrame frame;
     private JComboBox<String> lotSelector;
     private JComboBox<String> spaceSelector;
@@ -19,6 +20,7 @@ public class AdminParkingServices {
     private ArrayList<ParkingLot> parkingLots;
 
     public AdminParkingServices() {
+        parkingServices = new ParkingServices(); // Initialize ParkingServices instance
         parkingLots = new ArrayList<>();
         frame = new JFrame("Parking Services");
         frame.setSize(500, 400);
@@ -69,6 +71,7 @@ public class AdminParkingServices {
     }
 
     private void addEventHandlers() {
+        // Add new Parking Lot
         addLotButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -78,31 +81,78 @@ public class AdminParkingServices {
                     parkingLots.add(newLot);
                     lotModel.addElement(lotName);
                     lotNameField.setText("");
+
+                    // Call the method in ParkingServices
+                    parkingServices.addParkingLot(lotName);
+
                     updateSpaceSelector();
                 }
             }
         });
 
+        // Enable selected Parking Lot
         enableLotButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 int index = lotSelector.getSelectedIndex();
                 if (index >= 0) {
-                    parkingLots.get(index).enable();
+                    ParkingLot lot = parkingLots.get(index);
+                    parkingServices.enableParkingLot(lot);
                 }
             }
         });
 
+        // Disable selected Parking Lot
         disableLotButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 int index = lotSelector.getSelectedIndex();
                 if (index >= 0) {
-                    parkingLots.get(index).disable();
+                    ParkingLot lot = parkingLots.get(index);
+                    parkingServices.disableParkingLot(lot);
                 }
             }
         });
 
+        // Enable selected Parking Space
+        enableSpaceButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                int index = spaceSelector.getSelectedIndex();
+                if (index >= 0) {
+                    String spaceId = (String) spaceModel.getElementAt(index);
+                    for (ParkingLot lot : parkingLots) {
+                        for (ParkingComponent space : lot.getParkingSpaces()) {
+                            if (space instanceof ParkingSpace && space.getId().equals(spaceId)) {
+                                parkingServices.enableParkingSpace((ParkingSpace) space);
+                                return;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Disable selected Parking Space (Fixed missing `}` issue)
+        disableSpaceButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                int index = spaceSelector.getSelectedIndex();
+                if (index >= 0) {
+                    String spaceId = (String) spaceModel.getElementAt(index);
+                    for (ParkingLot lot : parkingLots) {
+                        for (ParkingComponent space : lot.getParkingSpaces()) {
+                            if (space instanceof ParkingSpace && space.getId().equals(spaceId)) {
+                                parkingServices.disableParkingSpace((ParkingSpace) space);
+                                return;
+                            }
+                        }
+                    }
+                }
+            } // <-- Corrected missing closing bracket
+        });
+
+        // Update space selector when a parking lot is selected
         lotSelector.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -124,7 +174,9 @@ public class AdminParkingServices {
             }
         }
     }
-
+    
+    
+    
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> new AdminParkingServices());
     }
