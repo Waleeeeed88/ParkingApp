@@ -63,13 +63,13 @@ public class ParkingServices {
     public void enableParkingLot(ParkingLot lot) {
         lot.enable();
         //Add REST function to enable all parkingspots in lot	
-       // storeEnabledLotInfoInFirestore(lot);
+        storeEnabledLotInfoInFirestore(lot);
     }
     // Method to disable a parking LOT
     public void disableParkingLot(ParkingLot lot) {
         lot.disable();
       //Add REST function to enable all parkingspots in lot
-       storeDisabledLotInfoInFirestore(lot );
+        storeEnabledLotInfoInFirestore(lot);
 
     }
     
@@ -156,11 +156,12 @@ public class ParkingServices {
         }
     }
 
+
     
     /*
      * DISABLE LOT IN FIRESTORE DB
      */
-    private void storeDisabledLotInfoInFirestore(ParkingLot parkingLot) { 
+    private void storeEnabledLotInfoInFirestore(ParkingLot parkingLot) { 
         try {
             // Reference to Firestore document for this parking lot
             DocumentReference lotDocRef = database.collection("Parking_spaces").document(parkingLot.getId());
