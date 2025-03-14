@@ -1,24 +1,25 @@
 package com.parkingapp;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.HashMap;
-import java.util.Map;
+import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class AdminDashboard extends JFrame {
-    private JButton addParkingButton, enableParkingButton, disableParkingButton, underMaintenanceButton, logoutButton, createAdminButton;
+    private JButton openParkingServicesButton, logoutButton, createAdminButton, viewAdminAccountsButton;
     private ParkingServices parkingServices;
-    private JList<String> parkingList;
-    private DefaultListModel<String> parkingListModel;
-    private AdminAccountPrototype adminPrototype; // Prototype for admin accounts
+    private AdminAccountPrototype adminPrototype;
+    private static final String CSV_FILE = "admin_accounts.csv";
 
     public AdminDashboard(ParkingServices parkingServices, AdminAccountPrototype adminPrototype) {
         this.parkingServices = parkingServices;
         this.adminPrototype = adminPrototype;
 
         setTitle("Admin Dashboard");
-        setSize(600, 450);
+        setSize(500, 250);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
 
@@ -34,86 +35,49 @@ public class AdminDashboard extends JFrame {
         gbc.gridwidth = 2;
         panel.add(dashboardLabel, gbc);
 
-        JLabel currentSpacesLabel = new JLabel("Current Parking Spaces");
-        currentSpacesLabel.setFont(new Font("Arial", Font.BOLD, 18));
+        openParkingServicesButton = new JButton("Open Parking Lot and Space Management Services");
         gbc.gridx = 0;
         gbc.gridy = 1;
         gbc.gridwidth = 2;
-        panel.add(currentSpacesLabel, gbc);
+        panel.add(openParkingServicesButton, gbc);
 
-        parkingListModel = new DefaultListModel<>();
-        parkingList = new JList<>(parkingListModel);
-        parkingList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        JScrollPane scrollPane = new JScrollPane(parkingList);
+        createAdminButton = new JButton("Auto-Generate Admin Accounts");
         gbc.gridx = 0;
         gbc.gridy = 2;
-        gbc.gridwidth = 2;
-        gbc.weightx = 1.0; // Allow list to expand horizontally
-        gbc.weighty = 1.0; // Allow list to expand vertically
-        gbc.fill = GridBagConstraints.BOTH; // Fill both horizontally and vertically
-        panel.add(scrollPane, gbc);
-
-
-        addParkingButton = new JButton("Add Parking Lot");
-        gbc.gridx = 0;
-        gbc.gridy = 3;
-        gbc.gridwidth = 1; // Set gridwidth back to 1
-        gbc.weightx = 0; // Reset weightx
-        gbc.weighty = 0;
-        gbc.fill = GridBagConstraints.HORIZONTAL; // Reset fill
-        panel.add(addParkingButton, gbc);
-
-
-        enableParkingButton = new JButton("Enable Parking");
-        gbc.gridx = 1;
-        gbc.gridy = 3;
         gbc.gridwidth = 1;
-        panel.add(enableParkingButton, gbc);
-
-        disableParkingButton = new JButton("Disable Parking");
-        gbc.gridx = 0;
-        gbc.gridy = 4;
-        gbc.gridwidth = 1;
-
-        panel.add(disableParkingButton, gbc);
-
-        underMaintenanceButton = new JButton("Put Under Maintenance");
-        gbc.gridx = 1;
-        gbc.gridy = 4;
-        gbc.gridwidth = 1;
-        panel.add(underMaintenanceButton, gbc);
-
-        createAdminButton = new JButton("Create Admin Account");
-        gbc.gridx = 0;
-        gbc.gridy = 5;  // Corrected y position
-        gbc.gridwidth = 2; // Span two columns
         panel.add(createAdminButton, gbc);
 
+        viewAdminAccountsButton = new JButton("View Generated Accounts");
+        gbc.gridx = 1;
+        gbc.gridy = 2;
+        gbc.gridwidth = 1;
+        panel.add(viewAdminAccountsButton, gbc);
 
         logoutButton = new JButton("Logout");
         gbc.gridx = 0;
-        gbc.gridy = 6; // Adjusted for the new button
+        gbc.gridy = 3;
         gbc.gridwidth = 2;
         panel.add(logoutButton, gbc);
 
         add(panel);
 
-        addParkingButton.addActionListener(e -> addParkingLot());
-        enableParkingButton.addActionListener(e -> enableParking());
-        disableParkingButton.addActionListener(e -> disableParking());
-        underMaintenanceButton.addActionListener(e -> putUnderMaintenance());
+        openParkingServicesButton.addActionListener(e -> openParkingServices());
+        createAdminButton.addActionListener(e -> createAdminAccount());
+        viewAdminAccountsButton.addActionListener(e -> viewGeneratedAccounts());
         logoutButton.addActionListener(e -> logout());
-        createAdminButton.addActionListener(e -> createAdminAccount()); // Add action listener
 
-
-        refreshParkingList();
         setVisible(true);
     }
+
+    private void openParkingServices() {
+        new AdminParkingServices();
+    }
+
     private void createAdminAccount() {
         JTextField userIdField = new JTextField(10);
         JPasswordField passwordField = new JPasswordField(10);
 
-        JPanel inputPanel = new JPanel(new GridLayout(0, 1)); // Use GridLayout for vertical layout
+        JPanel inputPanel = new JPanel(new GridLayout(0, 1));
         inputPanel.add(new JLabel("User ID:"));
         inputPanel.add(userIdField);
         inputPanel.add(new JLabel("Password:"));
@@ -128,150 +92,82 @@ public class AdminDashboard extends JFrame {
 
             if (userId.isEmpty() || password.isEmpty()) {
                 JOptionPane.showMessageDialog(this, "User ID and password cannot be empty.", "Error", JOptionPane.ERROR_MESSAGE);
-                return; // Exit if input is invalid
+                return;
             }
 
-            // Use the prototype to create a new admin account
             AdminAccount newAdmin = adminPrototype.clone();
             newAdmin.setUserId(userId);
-            newAdmin.setPassword(password);  // Ideally, hash the password here
+            newAdmin.setPassword(password);
 
-            // Store the new admin account (in a real application, you'd use a database)
-            AdminLogin.addAdminAccount(userId, password); //static method to add the admin
+            AdminLogin.addAdminAccount(userId, password);
+            saveAdminAccountToCSV(userId, password);
 
             JOptionPane.showMessageDialog(this, "Admin account created for User ID: " + userId);
         }
     }
 
-    
-    private void addParkingLot() {
-        String id = JOptionPane.showInputDialog(this, "Enter Parking Lot ID:");
-        if (id != null && !id.trim().isEmpty()) {
-            String type = (String) JOptionPane.showInputDialog(
-                    this,
-                    "Select Parking Lot Type:",
-                    "Parking Lot Type",
-                    JOptionPane.QUESTION_MESSAGE,
-                    null, // No icon
-                    new String[]{"Standard", "Handicapped", "Compact", "Electric"}, // Options
-                    "Standard" // Default selection
-            );
-
-            if (type != null) {
-                ParkingSpace newSpace = ParkingSpaceFactory.createParkingSpace(id, type); //use factory
-                if (newSpace != null){
-                    parkingServices.addParking(newSpace);  // Corrected: Pass the ParkingSpace object directly
-                    JOptionPane.showMessageDialog(this, type + " parking lot added: " + id);
-                    refreshParkingList();
-                }
-            }
-        } else if (id != null) { // Handle empty input
-            JOptionPane.showMessageDialog(this, "Parking Lot ID cannot be empty.", "Error", JOptionPane.ERROR_MESSAGE);
-        }
-    }
-    private void enableParking() {
-        String id = JOptionPane.showInputDialog(this, "Enter Parking Lot ID to enable:");
-        if (id != null && !id.isEmpty()) {
-            Parking parking = parkingServices.getParking(id);
-            if (parking == null) {
-                JOptionPane.showMessageDialog(this, "Parking lot ID does not exist.", "Error", JOptionPane.ERROR_MESSAGE);
-            } else {
-
-                parking.setEnabled(true);
-                parking.setUnderMaintenance(false);
-                JOptionPane.showMessageDialog(this, "Parking lot enabled: " + id);
-                refreshParkingList();
-
-            }
+    private void saveAdminAccountToCSV(String userId, String password) {
+        try (FileWriter writer = new FileWriter(CSV_FILE, true)) {
+            writer.append(userId).append(",").append(password).append("\n");
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(this, "Error saving admin account.", "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
-    private void disableParking() {
-        String id = JOptionPane.showInputDialog(this, "Enter Parking Lot ID to disable:");
-        if (id != null && !id.isEmpty()) {
-            Parking parking = parkingServices.getParking(id);
-            if (parking == null) {
-                JOptionPane.showMessageDialog(this, "Parking lot ID does not exist.", "Error", JOptionPane.ERROR_MESSAGE);
-            } else {
-                parking.setEnabled(false);
-                JOptionPane.showMessageDialog(this, "Parking lot disabled: " + id);
-                refreshParkingList();
+    private void viewGeneratedAccounts() {
+        List<String> accounts = new ArrayList<>();
+        try (BufferedReader reader = new BufferedReader(new FileReader(CSV_FILE))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                accounts.add(line);
             }
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(this, "No generated accounts found.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        if (accounts.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "No admin accounts available.");
+        } else {
+            JOptionPane.showMessageDialog(this, String.join("\n", accounts), "Generated Admin Accounts", JOptionPane.INFORMATION_MESSAGE);
         }
     }
 
-    private void putUnderMaintenance() {
-        String id = JOptionPane.showInputDialog(this, "Enter Parking Lot ID to put under maintenance:");
-        if (id != null && !id.isEmpty()) {
-            Parking parking = parkingServices.getParking(id);
-            if (parking == null) {
-                JOptionPane.showMessageDialog(this, "Parking lot ID does not exist.", "Error", JOptionPane.ERROR_MESSAGE);
-            } else {
-                parking.setUnderMaintenance(true);
-                parking.setEnabled(false); //good practice
-                JOptionPane.showMessageDialog(this, "Parking lot under maintenance: " + id);
-                refreshParkingList();
-            }
-        }
-    }
     private void logout() {
-        dispose();
-        new AdminLogin().setVisible(true);
-    }
-    private void refreshParkingList() {
-        parkingListModel.clear();
-        Map<String, Parking> parkingSpaces = parkingServices.getParkingSpaces();
-        for (Parking parking : parkingSpaces.values()) { // Iterate through values directly
-            String id = parking.getId(); // Get ID from Parking object
-            String status = parking.isEnabled() ? "Enabled" : "Disabled";
-            if (parking.isUnderMaintenance()) {
-                status = "Under Maintenance";
-            }
-            parkingListModel.addElement(id + " - " + status);
-        }
+        dispose(); // Close current dashboard window
+        SwingUtilities.invokeLater(() -> new AdminLogin().setVisible(true)); // Open login panel again
     }
 
     public static void main(String[] args) {
         ParkingServices parkingServices = new ParkingServices();
-        // Create a prototype admin account.  In a real system, you might
-        // load this from a configuration file or database.
-        AdminAccount prototypeAdmin = new AdminAccount("defaultAdmin", "defaultPassword"); // Consider better defaults
+        AdminAccount prototypeAdmin = new AdminAccount("defaultAdmin", "defaultPassword");
 
         SwingUtilities.invokeLater(() -> new AdminDashboard(parkingServices, prototypeAdmin).setVisible(true));
     }
 }
-//Parking services class
-
-
-
-// Prototype interface
 interface AdminAccountPrototype extends Cloneable {
     AdminAccount clone();
-
     void setUserId(String userId);
-
-    void setPassword(String password); // Consider hashing the password
+    void setPassword(String password);
 }
 
-// Concrete Prototype
 class AdminAccount implements AdminAccountPrototype {
     private String userId;
-    private String password; // Store a hashed password, NOT plaintext!
+    private String password;
 
     public AdminAccount(String userId, String password) {
         this.userId = userId;
-        this.password = password; // In a real system, hash the password!
+        this.password = password;
     }
 
-    // Copy constructor for the Prototype pattern
     public AdminAccount(AdminAccount source) {
         this.userId = source.userId;
-        this.password = source.password; // Copy the (hashed) password
+        this.password = source.password;
     }
 
     @Override
     public AdminAccount clone() {
-        return new AdminAccount(this); // Use the copy constructor
+        return new AdminAccount(this);
     }
 
     @Override
@@ -281,15 +177,6 @@ class AdminAccount implements AdminAccountPrototype {
 
     @Override
     public void setPassword(String password) {
-        this.password = password; // Hash the password in a real application!
-    }
-
-
-    public String getUserId() {
-        return userId;
-    }
-
-    public String getPassword() {
-        return password;
+        this.password = password;
     }
 }
