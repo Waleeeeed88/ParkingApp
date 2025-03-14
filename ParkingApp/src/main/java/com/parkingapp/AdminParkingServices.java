@@ -15,11 +15,14 @@ public class AdminParkingServices {
     private JTextField lotNameField;
     private JButton addLotButton, enableLotButton, disableLotButton;
     private JButton enableSpaceButton, disableSpaceButton;
+    private JButton returnButton; // Added Return Button to admin dashboard (either super or reg admin)
     private DefaultComboBoxModel<String> lotModel;
     private DefaultComboBoxModel<String> spaceModel;
     private ArrayList<ParkingLot> parkingLots;
+    private boolean isSuperManager; // Flag to determine user role
 
-    public AdminParkingServices() {
+    public AdminParkingServices(boolean isSuperManager) {
+        this.isSuperManager = isSuperManager;
         parkingServices = new ParkingServices(); // Initialize ParkingServices instance
         parkingLots = new ArrayList<>();
         frame = new JFrame("Parking Services");
@@ -65,6 +68,12 @@ public class AdminParkingServices {
         spacePanel.add(disableSpaceButton);
 
         frame.add(spacePanel);
+
+        // New Panel for Return Button
+        JPanel returnPanel = new JPanel();
+        returnButton = new JButton("Return to Dashboard");
+        returnPanel.add(returnButton);
+        frame.add(returnPanel);
 
         addEventHandlers();
         frame.setVisible(true);
@@ -152,6 +161,19 @@ public class AdminParkingServices {
             } // <-- Corrected missing closing bracket
         });
 
+        // FIXED RETURN BUTTON FUNCTIONALITY
+        returnButton.addActionListener(e -> {
+            frame.dispose(); // Close current window
+
+            if (isSuperManager) {
+                new AdminDashboard(new ParkingServices(), new AdminAccount("defaultAdmin", "defaultPassword"), isSuperManager).setVisible(true);
+
+            } else {
+
+                new BaseLogin.AdminManagementPanel().setVisible(true);
+            }
+        });
+
         // Update space selector when a parking lot is selected
         lotSelector.addActionListener(new ActionListener() {
             @Override
@@ -178,6 +200,8 @@ public class AdminParkingServices {
     
     
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> new AdminParkingServices());
+
+        SwingUtilities.invokeLater(() -> new AdminParkingServices(true));
+
     }
 }

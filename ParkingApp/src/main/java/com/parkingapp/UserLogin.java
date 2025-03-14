@@ -159,7 +159,7 @@ public class UserLogin extends JFrame { // *** IMPORTANT: Extend JFrame
 
         loginButton.addActionListener(e -> performLogin());
         goToRegisterButton.addActionListener(e -> cardLayout.show(mainPanel, "register"));
-        goToAdminLoginButton.addActionListener(e -> new AdminLogin().setVisible(true)); //create admin page
+        goToAdminLoginButton.addActionListener(e -> new BaseLogin.ManagementLogin().setVisible(true)); //create admin page
 
         return panel;
     }

@@ -2,21 +2,22 @@ package com.parkingapp;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
 public class AdminDashboard extends JFrame {
+    private boolean isSuperManager;
     private JButton openParkingServicesButton, logoutButton, createAdminButton, viewAdminAccountsButton;
     private ParkingServices parkingServices;
     private AdminAccountPrototype adminPrototype;
     private static final String CSV_FILE = "admin_accounts.csv";
 
-    public AdminDashboard(ParkingServices parkingServices, AdminAccountPrototype adminPrototype) {
+    public AdminDashboard(ParkingServices parkingServices, AdminAccountPrototype adminPrototype, boolean isSuperManager) {
         this.parkingServices = parkingServices;
         this.adminPrototype = adminPrototype;
+        this.isSuperManager = isSuperManager;
+
 
         setTitle("Admin Dashboard");
         setSize(500, 250);
@@ -47,7 +48,7 @@ public class AdminDashboard extends JFrame {
         gbc.gridwidth = 1;
         panel.add(createAdminButton, gbc);
 
-        viewAdminAccountsButton = new JButton("View Generated Accounts");
+        viewAdminAccountsButton = new JButton("View Admin Accounts");
         gbc.gridx = 1;
         gbc.gridy = 2;
         gbc.gridwidth = 1;
@@ -70,7 +71,9 @@ public class AdminDashboard extends JFrame {
     }
 
     private void openParkingServices() {
-        new AdminParkingServices();
+        dispose();
+        new AdminParkingServices(isSuperManager);
+
     }
 
     private void createAdminAccount() {
@@ -99,16 +102,23 @@ public class AdminDashboard extends JFrame {
             newAdmin.setUserId(userId);
             newAdmin.setPassword(password);
 
-            AdminLogin.addAdminAccount(userId, password);
             saveAdminAccountToCSV(userId, password);
-
             JOptionPane.showMessageDialog(this, "Admin account created for User ID: " + userId);
         }
     }
 
     private void saveAdminAccountToCSV(String userId, String password) {
+        int counter = 0;
+        try (BufferedReader reader = new BufferedReader(new FileReader(CSV_FILE))) {
+            while (reader.readLine() != null) {
+                counter++; // Count the existing lines
+            }
+        } catch (IOException ignored) {
+            // File might not exist yet, ignore
+        }
+
         try (FileWriter writer = new FileWriter(CSV_FILE, true)) {
-            writer.append(userId).append(",").append(password).append("\n");
+            writer.append(userId).append("; ").append(password).append("\n");
         } catch (IOException e) {
             JOptionPane.showMessageDialog(this, "Error saving admin account.", "Error", JOptionPane.ERROR_MESSAGE);
         }
@@ -122,35 +132,42 @@ public class AdminDashboard extends JFrame {
                 accounts.add(line);
             }
         } catch (IOException e) {
-            JOptionPane.showMessageDialog(this, "No generated accounts found.", "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "No admin accounts found.", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
         if (accounts.isEmpty()) {
             JOptionPane.showMessageDialog(this, "No admin accounts available.");
         } else {
-            JOptionPane.showMessageDialog(this, String.join("\n", accounts), "Generated Admin Accounts", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(this, String.join("\n", accounts), "Admin Accounts", JOptionPane.INFORMATION_MESSAGE);
         }
     }
 
     private void logout() {
         dispose(); // Close current dashboard window
-        SwingUtilities.invokeLater(() -> new AdminLogin().setVisible(true)); // Open login panel again
+        SwingUtilities.invokeLater(() -> new BaseLogin.ManagementLogin().setVisible(true)); // Open login panel again
     }
 
     public static void main(String[] args) {
         ParkingServices parkingServices = new ParkingServices();
         AdminAccount prototypeAdmin = new AdminAccount("defaultAdmin", "defaultPassword");
 
-        SwingUtilities.invokeLater(() -> new AdminDashboard(parkingServices, prototypeAdmin).setVisible(true));
+        SwingUtilities.invokeLater(() -> new AdminDashboard(parkingServices, prototypeAdmin, true).setVisible(true));
     }
 }
+
+// ---------------------------------
+// Admin Account Prototype Interface
+// ---------------------------------
 interface AdminAccountPrototype extends Cloneable {
     AdminAccount clone();
     void setUserId(String userId);
     void setPassword(String password);
 }
 
+// ---------------------------------
+// Admin Account Class (Prototype Pattern)
+// ---------------------------------
 class AdminAccount implements AdminAccountPrototype {
     private String userId;
     private String password;

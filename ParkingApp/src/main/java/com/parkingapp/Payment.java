@@ -3,160 +3,98 @@ package com.parkingapp;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.io.BufferedWriter;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 
 public class Payment extends JFrame {
 
-    private JTextField cardNumberField, expiryDateField, cvvField, cardholderNameField, provinceField, postalCodeField, billingAddressField;
-    private JTextField recipientNameField, bankNameField, transitNumberField, institutionNumberField, accountNumberField;
-    private JTextField paypalUsernameField, paypalEmailField;
-    private JTextField transactionAmountField;
-    private JComboBox<String> paymentTypeComboBox;
-    private JLabel balanceLabel;
-    private JButton payButton;
-    private JPanel cardPanel, bankPanel, paypalPanel;
-    private double userBalance = 0.0;
+    private double userBalance = 0.0;  // Balance stored
     private String userEmail;
+    private JLabel balanceLabel;
 
     public Payment(String userEmail) {
         this.userEmail = userEmail;
-        setTitle("Payment Options");
-        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        setSize(600, 550);
+        setTitle("Payment System");
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setSize(400, 250);
         setLocationRelativeTo(null);
 
-        JPanel mainPanel = new JPanel(new BorderLayout());
+        JPanel mainPanel = new JPanel(new GridLayout(3, 1, 10, 10));
         mainPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
 
-        JPanel inputPanel = new JPanel(new GridBagLayout());
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(5, 5, 5, 5);
-        gbc.fill = GridBagConstraints.HORIZONTAL;
+        balanceLabel = new JLabel("Current Balance: $" + userBalance, JLabel.CENTER);
+        balanceLabel.setFont(new Font("Arial", Font.BOLD, 18));
+        mainPanel.add(balanceLabel);
 
-        JLabel paymentTypeLabel = new JLabel("Payment Type:");
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        inputPanel.add(paymentTypeLabel, gbc);
+        JButton depositButton = new JButton("Deposit Funds");
+        depositButton.addActionListener(e -> openDepositPanel());
+        mainPanel.add(depositButton);
 
-        String[] paymentTypes = {"Debit/Credit Card", "Bank Transfer", "PayPal"};
-        paymentTypeComboBox = new JComboBox<>(paymentTypes);
-        gbc.gridx = 1;
-        gbc.gridy = 0;
-        inputPanel.add(paymentTypeComboBox, gbc);
-
-        JLabel amountLabel = new JLabel("Transaction Amount:");
-        gbc.gridx = 0;
-        gbc.gridy = 1;
-        inputPanel.add(amountLabel, gbc);
-
-        transactionAmountField = new JTextField(10);
-        gbc.gridx = 1;
-        gbc.gridy = 1;
-        inputPanel.add(transactionAmountField, gbc);
-
-        balanceLabel = new JLabel("Balance: $" + userBalance);
-        gbc.gridx = 0;
-        gbc.gridy = 2;
-        gbc.gridwidth = 2;
-        inputPanel.add(balanceLabel, gbc);
-
-        mainPanel.add(inputPanel, BorderLayout.NORTH);
-
-        cardPanel = createCardPanel();
-        mainPanel.add(cardPanel, BorderLayout.CENTER);
-
-        bankPanel = createBankPanel();
-        mainPanel.add(bankPanel, BorderLayout.CENTER);
-        bankPanel.setVisible(false);
-
-        paypalPanel = createPayPalPanel();
-        mainPanel.add(paypalPanel, BorderLayout.CENTER);
-        paypalPanel.setVisible(false);
-
-        payButton = new JButton("Pay");
-        mainPanel.add(payButton, BorderLayout.SOUTH);
+        JButton payButton = new JButton("Make a Payment");
+        payButton.addActionListener(e -> openPayPanel());
+        mainPanel.add(payButton);
 
         add(mainPanel);
-
-        paymentTypeComboBox.addActionListener(e -> updatePaymentPanel());
-        payButton.addActionListener(e -> processPayment());
     }
 
-    private JPanel createCardPanel() {
-        JPanel panel = new JPanel(new GridBagLayout());
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(5, 5, 5, 5);
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-
-        cardNumberField = createTextField("Card Number:", panel, gbc, 0);
-        expiryDateField = createTextField("Expiry Date (MM/YY):", panel, gbc, 1);
-        cvvField = createTextField("CVV:", panel, gbc, 2);
-        cardholderNameField = createTextField("Cardholder Name:", panel, gbc, 3);
-        provinceField = createTextField("Province:", panel, gbc, 4);
-        postalCodeField = createTextField("Postal Code:", panel, gbc, 5);
-        billingAddressField = createTextField("Billing Address:", panel, gbc, 6);
-
-        return panel;
+    private void openDepositPanel() {
+        new DepositPanel(this).setVisible(true);
     }
 
-    private JPanel createBankPanel() {
-        JPanel panel = new JPanel(new GridBagLayout());
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(5, 5, 5, 5);
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-
-        recipientNameField = createTextField("Recipient Name:", panel, gbc, 0);
-        bankNameField = createTextField("Bank Name:", panel, gbc, 1);
-        transitNumberField = createTextField("Transit Number:", panel, gbc, 2);
-        institutionNumberField = createTextField("Institution Number:", panel, gbc, 3);
-        accountNumberField = createTextField("Account Number:", panel, gbc, 4);
-
-        return panel;
+    private void openPayPanel() {
+        new PayPanel(this).setVisible(true);
     }
 
-    private JPanel createPayPalPanel() {
-        JPanel panel = new JPanel(new GridBagLayout());
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(5, 5, 5, 5);
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-
-        paypalUsernameField = createTextField("PayPal Username:", panel, gbc, 0);
-        paypalEmailField = createTextField("PayPal Email:", panel, gbc, 1);
-
-        return panel;
+    public void updateBalance(double amount) {
+        userBalance += amount;
+        balanceLabel.setText("Current Balance: $" + userBalance);
     }
 
-    private JTextField createTextField(String labelText, JPanel panel, GridBagConstraints gbc, int gridy) {
-        JLabel label = new JLabel(labelText);
-        gbc.gridx = 0;
-        gbc.gridy = gridy;
-        panel.add(label, gbc);
-
-        JTextField textField = new JTextField(20);
-        gbc.gridx = 1;
-        gbc.gridy = gridy;
-        panel.add(textField, gbc);
-        return textField;
+    public boolean deductBalance(double amount) {
+        if (amount > userBalance) {
+            JOptionPane.showMessageDialog(this, "Insufficient funds!", "Error", JOptionPane.ERROR_MESSAGE);
+            return false;
+        }
+        userBalance -= amount;
+        balanceLabel.setText("Current Balance: $" + userBalance);
+        return true;
     }
 
-    private void updatePaymentPanel() {
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> new Payment("testuser@example.com").setVisible(true));
+    }
+}
+
+class DepositPanel extends JFrame {
+    private JComboBox<String> paymentTypeComboBox;
+    private JTextField depositAmountField;
+    private Payment parent;
+
+    public DepositPanel(Payment parent) {
+        this.parent = parent;
+        setTitle("Deposit Funds");
+        setSize(350, 200);
+        setLocationRelativeTo(null);
+        setLayout(new GridLayout(4, 2, 10, 10));
+
+        add(new JLabel("Payment Method:"));
+        String[] paymentMethods = {"Credit Card", "Bank Transfer", "PayPal"};
+        paymentTypeComboBox = new JComboBox<>(paymentMethods);
+        add(paymentTypeComboBox);
+
+        add(new JLabel("Amount:"));
+        depositAmountField = new JTextField();
+        add(depositAmountField);
+
+        JButton proceedButton = new JButton("Proceed");
+        proceedButton.addActionListener(e -> openPaymentWindow());
+        add(proceedButton);
+    }
+
+    private void openPaymentWindow() {
         String selectedPaymentType = (String) paymentTypeComboBox.getSelectedItem();
-        cardPanel.setVisible(selectedPaymentType.equals("Debit/Credit Card"));
-        bankPanel.setVisible(selectedPaymentType.equals("Bank Transfer"));
-        paypalPanel.setVisible(selectedPaymentType.equals("PayPal"));
-    }
-
-    private void processPayment() {
-        String paymentType = (String) paymentTypeComboBox.getSelectedItem();
         double amount;
+
         try {
-            amount = Double.parseDouble(transactionAmountField.getText());
+            amount = Double.parseDouble(depositAmountField.getText());
             if (amount <= 0) {
                 JOptionPane.showMessageDialog(this, "Amount must be greater than zero.", "Error", JOptionPane.ERROR_MESSAGE);
                 return;
@@ -166,69 +104,138 @@ public class Payment extends JFrame {
             return;
         }
 
-        Map<String, String> paymentDetails = new HashMap<>();
-        paymentDetails.put("Payment Type", paymentType);
-        paymentDetails.put("Amount", String.valueOf(amount));
-        paymentDetails.put("User Email", userEmail);
-
-        PaymentStrategy strategy = null;
-        if (paymentType.equals("Debit/Credit Card")) {
-            strategy = new CreditCardPayment();
-        } else if (paymentType.equals("Bank Transfer")) {
-            strategy = new BankTransferPayment();
-        } else if (paymentType.equals("PayPal")) {
-            strategy = new PayPalPayment();
-        }
-
-        if (strategy != null) {
-            strategy.processPayment(paymentDetails, amount, this);
+        if (selectedPaymentType.equals("Credit Card")) {
+            new CreditCardPaymentWindow(this, amount).setVisible(true);
+        } else if (selectedPaymentType.equals("Bank Transfer")) {
+            new BankTransferPaymentWindow(this, amount).setVisible(true);
+        } else if (selectedPaymentType.equals("PayPal")) {
+            new PayPalPaymentWindow(this, amount).setVisible(true);
         }
     }
 
-    private void writePaymentToCSV(Map<String, String> paymentDetails) {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter("payment_details.csv", true))) {
-            StringBuilder line = new StringBuilder();
-            for (String value : paymentDetails.values()) {
-                line.append(value).append(",");
+    public void confirmDeposit(double amount) {
+        parent.updateBalance(amount);
+        JOptionPane.showMessageDialog(this, "Deposit successful! $" + amount + " added.");
+        dispose();
+    }
+}
+
+class PayPanel extends JFrame {
+    private JTextField paymentAmountField;
+    private Payment parent;
+
+    public PayPanel(Payment parent) {
+        this.parent = parent;
+        setTitle("Make a Payment");
+        setSize(300, 150);
+        setLocationRelativeTo(null);
+        setLayout(new GridLayout(3, 2, 10, 10));
+
+        add(new JLabel("Enter Payment Amount:"));
+        paymentAmountField = new JTextField();
+        add(paymentAmountField);
+
+        JButton payButton = new JButton("Pay");
+        payButton.addActionListener(e -> processPayment());
+        add(payButton);
+    }
+
+    private void processPayment() {
+        double amount;
+        try {
+            amount = Double.parseDouble(paymentAmountField.getText());
+            if (amount <= 0) {
+                JOptionPane.showMessageDialog(this, "Amount must be greater than zero.", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
             }
-            line.deleteCharAt(line.length() - 1);
-            writer.write(line.toString());
-            writer.newLine();
-        } catch (IOException e) {
-            JOptionPane.showMessageDialog(this, "Error writing to CSV file.", "Error", JOptionPane.ERROR_MESSAGE);
-            e.printStackTrace();
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(this, "Invalid amount.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
         }
-    }
 
-    // Strategy Pattern: Payment Strategy Interface
-    interface PaymentStrategy {
-        void processPayment(Map<String, String> paymentDetails, double amount, Payment payment);
-    }
-
-    // Concrete Strategy: Credit Card Payment
-    class CreditCardPayment implements PaymentStrategy {
-        @Override
-        public void processPayment(Map<String, String> paymentDetails, double amount, Payment payment) {
-            JOptionPane.showMessageDialog(payment, "Credit Card Payment of $" + amount + " Successful.");
-            payment.writePaymentToCSV(paymentDetails);
-        }
-    }
-
-    // Concrete Strategy: Bank Transfer Payment
-    class BankTransferPayment implements PaymentStrategy {
-        @Override
-        public void processPayment(Map<String, String> paymentDetails, double amount, Payment payment) {
-            JOptionPane.showMessageDialog(payment, "Bank Transfer Payment of $" + amount + " Successful.");
-            payment.writePaymentToCSV(paymentDetails);
-        }
-    }
-
-    // Concrete Strategy: PayPal Payment
-    class PayPalPayment implements PaymentStrategy {
-        @Override
-        public void processPayment(Map<String, String> paymentDetails, double amount, Payment payment) {
-            JOptionPane.showMessageDialog(payment, "PayPal Payment of $" + amount + " Successful.");
-            payment.writePaymentToCSV(paymentDetails);
+        if (parent.deductBalance(amount)) {
+            JOptionPane.showMessageDialog(this, "Payment of $" + amount + " was successful!");
+            dispose();
         }
     }
 }
+
+class CreditCardPaymentWindow extends JFrame {
+    public CreditCardPaymentWindow(DepositPanel parent, double amount) {
+        setTitle("Credit Card Payment");
+        setSize(350, 250);
+        setLocationRelativeTo(null);
+
+        JPanel panel = new JPanel(new GridLayout(5, 2, 10, 10));
+        panel.setBorder(new EmptyBorder(10, 10, 10, 10));
+
+        panel.add(new JLabel("Card Number:"));
+        panel.add(new JTextField());
+
+        panel.add(new JLabel("Expiry Date:"));
+        panel.add(new JTextField());
+
+        panel.add(new JLabel("CVV:"));
+        panel.add(new JTextField());
+
+        JButton confirmButton = new JButton("Confirm");
+        confirmButton.addActionListener(e -> {
+            parent.confirmDeposit(amount);
+            dispose();
+        });
+        panel.add(confirmButton);
+
+        add(panel);
+    }
+}
+
+class BankTransferPaymentWindow extends JFrame {
+    public BankTransferPaymentWindow(DepositPanel parent, double amount) {
+        setTitle("Bank Transfer");
+        setSize(350, 200);
+        setLocationRelativeTo(null);
+
+        JPanel panel = new JPanel(new GridLayout(4, 2, 10, 10));
+        panel.setBorder(new EmptyBorder(10, 10, 10, 10));
+
+        panel.add(new JLabel("Bank Name:"));
+        panel.add(new JTextField());
+
+        panel.add(new JLabel("Account Number:"));
+        panel.add(new JTextField());
+
+        JButton confirmButton = new JButton("Confirm");
+        confirmButton.addActionListener(e -> {
+            parent.confirmDeposit(amount);
+            dispose();
+        });
+        panel.add(confirmButton);
+
+        add(panel);
+    }
+}
+
+class PayPalPaymentWindow extends JFrame {
+    public PayPalPaymentWindow(DepositPanel parent, double amount) {
+        setTitle("PayPal Payment");
+        setSize(350, 150);
+        setLocationRelativeTo(null);
+
+        JPanel panel = new JPanel(new GridLayout(2, 2, 10, 10));
+        panel.setBorder(new EmptyBorder(10, 10, 10, 10));
+
+        panel.add(new JLabel("PayPal Email:"));
+        panel.add(new JTextField());
+
+        JButton confirmButton = new JButton("Confirm");
+        confirmButton.addActionListener(e -> {
+            parent.confirmDeposit(amount);
+            dispose();
+        });
+        panel.add(confirmButton);
+
+        add(panel);
+    }
+}
+
+
