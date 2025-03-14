@@ -18,6 +18,7 @@ import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
 import com.google.firebase.cloud.FirestoreClient;
 import com.parkingapp.UserLogin.UserType;
+import com.google.cloud.firestore.WriteBatch;
 public class ParkingServices {
 	
 	public static void main(String[] args) {
@@ -114,7 +115,7 @@ public class ParkingServices {
     /*
      * ADD LOT TO FIRESTORE DB
      */
-    private void storeAddLotInfoInFirestore(ParkingLot parkingLot) {
+private void storeAddLotInfoInFirestore(ParkingLot parkingLot) {
         try {
             // Reference to Firestore collection for parking lots
             DocumentReference lotDocRef = database.collection("Parking_spaces").document(parkingLot.getId());
@@ -131,7 +132,10 @@ public class ParkingServices {
             // Reference to the subcollection "parkingSpaces" inside the lot
             CollectionReference spacesCollection = lotDocRef.collection("parkingSpaces");
 
-            // Store each pre-initialized parking space
+            // Create a batch write instance
+            WriteBatch batch = database.batch();
+
+            // Add each parking space to the batch write
             for (ParkingComponent space : parkingLot.getParkingSpaces()) {
                 if (space instanceof ParkingSpace) {
                     ParkingSpace ps = (ParkingSpace) space;
@@ -143,11 +147,15 @@ public class ParkingServices {
                     spaceData.put("enabled", ps.isEnabled());
                     spaceData.put("occupied", ps.isOccupied());
 
-                    // Store the parking space as a document in the subcollection
-                    spacesCollection.document(ps.getId()).set(spaceData, SetOptions.merge()).get();
-                    System.out.println("Stored parking space: " + ps.getId() + " under lot " + parkingLot.getId());
+                    // Add set operation to the batch instead of executing immediately
+                    DocumentReference spaceDocRef = spacesCollection.document(ps.getId());
+                    batch.set(spaceDocRef, spaceData, SetOptions.merge());
                 }
             }
+
+            // Commit the batch write, which writes all documents at once
+            batch.commit().get();
+            System.out.println("All parking spaces added in batch under lot " + parkingLot.getId());
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -155,6 +163,7 @@ public class ParkingServices {
                     "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
+
 
 
     
