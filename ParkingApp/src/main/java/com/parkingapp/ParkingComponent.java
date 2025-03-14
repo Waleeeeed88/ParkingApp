@@ -9,6 +9,7 @@ interface ParkingComponent {
     String getId();
     void enable();
     void disable();
+    boolean isEnabled();
 }
 
 // Composite Class (ParkingLot)
@@ -27,7 +28,7 @@ class ParkingLot implements ParkingComponent {
     // Initialize Parking Lot with 100 Parking Spaces
     private void initializeParkingSpaces() {
         for (int i = 1; i <= 100; i++) {
-            parkingSpaces.add(new ParkingSpace(this.id + i));
+            parkingSpaces.add(new ParkingSpace(this.id + i, this.id));
         }
     }
 
@@ -55,17 +56,24 @@ class ParkingLot implements ParkingComponent {
             space.disable();
         }
     }
+    
+    @Override
+    public boolean isEnabled() {
+    	return enabled;
+    }
 }
 
 
 // Leaf Class (ParkingSpace)
 class ParkingSpace implements ParkingComponent {
     private String id;
+    private String parentId;
     private boolean enabled;
     private boolean occupied;
     private Sensor sensor;
 
-    public ParkingSpace(String id) {
+    public ParkingSpace(String id, String parentId) {
+    	this.parentId = parentId;	//location of parking space(which lot it belongs to)
         this.id = id;
         this.enabled = true; // Initially enabled
         this.occupied = false;
@@ -76,7 +84,11 @@ class ParkingSpace implements ParkingComponent {
     public String getId() {
         return id;
     }
-
+    
+    //return location
+    public String getParentId() {
+        return parentId;
+    }
 
     @Override
     public void enable() {
@@ -86,6 +98,11 @@ class ParkingSpace implements ParkingComponent {
     @Override
     public void disable() {
         this.enabled = false;
+    }
+    
+    @Override
+    public boolean isEnabled() {
+    	return enabled;
     }
 
 
@@ -157,10 +174,6 @@ class Sensor {
 //
 //        space2.carEnters("XYZ-789");
 //        space2.carLeaves();
-//
-//        // Setting maintenance mode for a space
-//        space1.setUnderMaintenance(true);
-//        space1.carEnters("DEF-456");
 //
 //        // Disabling a parking lot
 //        lot1.disable();
