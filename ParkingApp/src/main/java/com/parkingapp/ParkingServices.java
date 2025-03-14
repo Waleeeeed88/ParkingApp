@@ -13,35 +13,13 @@ import com.google.cloud.firestore.CollectionReference;
 import com.google.cloud.firestore.DocumentReference;
 import com.google.cloud.firestore.Firestore;
 import com.google.cloud.firestore.SetOptions;
+import com.google.cloud.firestore.WriteBatch;
 import com.google.cloud.firestore.WriteResult;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
 import com.google.firebase.cloud.FirestoreClient;
 import com.parkingapp.UserLogin.UserType;
-import com.google.cloud.firestore.WriteBatch;
 public class ParkingServices {
-	
-	public static void main(String[] args) {
-	    // Create a parking lot
-	    ParkingLot lot1 = new ParkingLot("Downtown Lot");
-
-	    // Get the first parking space from lot1
-	    ParkingSpace lot1space1 = (ParkingSpace) lot1.getParkingSpaces().get(0);
-	    
-	    ParkingLot lot2 = new ParkingLot("York");
-	    ParkingSpace lot2space1 = (ParkingSpace) lot2.getParkingSpaces().get(0);
-	    
-	    
-	    // Print details of the first parking space
-	    System.out.println("First Parking Space ID: " + lot1space1.getId());
-	    System.out.println("Parent Lot ID: " + lot1space1.getParentId());
-	    System.out.println("Is Enabled: " + lot1space1.isEnabled());
-	    System.out.println("Is Occupied: " + lot1space1.isOccupied());
-	    System.out.println("Is Enabled: " + lot1space1.isEnabled());
-	    lot1.disable();
-	    System.out.println("Is Enabled: " + lot1space1.isEnabled());
-	    System.out.println("Is Enabled: " + lot2space1.isEnabled());
-	}
 	Firestore database = FirebaseInitialization.getInstance();	//instance held in database
     /*
      * =================================================================
@@ -81,11 +59,13 @@ public class ParkingServices {
      */
     public void enableParkingSpace(ParkingSpace spot) {
     	spot.enable();
+    	storeSingleSpaceInfoInFirestore(spot);
     	
     }
 
-    public static void disableParkingSpace(ParkingSpace spot) {
+    public void disableParkingSpace(ParkingSpace spot) {
     	spot.disable();
+    	storeSingleSpaceInfoInFirestore(spot);
     	
     }
     /*
@@ -115,7 +95,7 @@ public class ParkingServices {
     /*
      * ADD LOT TO FIRESTORE DB
      */
-private void storeAddLotInfoInFirestore(ParkingLot parkingLot) {
+    private void storeAddLotInfoInFirestore(ParkingLot parkingLot) {
         try {
             // Reference to Firestore collection for parking lots
             DocumentReference lotDocRef = database.collection("Parking_spaces").document(parkingLot.getId());
@@ -165,10 +145,9 @@ private void storeAddLotInfoInFirestore(ParkingLot parkingLot) {
     }
 
 
-
     
     /*
-     * DISABLE LOT IN FIRESTORE DB
+     * ENABLE/DISABLE LOT IN FIRESTORE DB
      */
     private void storeEnabledLotInfoInFirestore(ParkingLot parkingLot) { 
         try {
@@ -189,6 +168,8 @@ private void storeAddLotInfoInFirestore(ParkingLot parkingLot) {
             // Disable all parking spaces in Firestore
             List<ApiFuture<WriteResult>> futures = new ArrayList<>();
 
+            // Create a batch write instance
+          
             for (ParkingComponent space : parkingLot.getParkingSpaces()) {
                 if (space instanceof ParkingSpace) {
                     ParkingSpace ps = (ParkingSpace) space;
@@ -216,5 +197,33 @@ private void storeAddLotInfoInFirestore(ParkingLot parkingLot) {
                     "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
+    
+    /*
+     * ENABLE SINGLE PARKING SPOT
+     */
+    private void storeSingleSpaceInfoInFirestore(ParkingSpace space) {
+    	try {
+            // Reference to Firestore document for this specific parking space
+            DocumentReference spaceDocRef = database.collection("Parking_spaces")
+                    .document(space.getParentId()) // Get the parent parking lot
+                    .collection("parkingSpaces")
+                    .document(space.getId());
+
+            // Prepare the update data
+            Map<String, Object> spaceData = new HashMap<>();
+            spaceData.put("enabled", space.isEnabled()); // Get the current status from the object
+
+            // Commit update to Firestore
+            WriteResult result = spaceDocRef.set(spaceData, SetOptions.merge()).get();
+            System.out.println("Parking Space " + space.getId() + " enabled at " + result.getUpdateTime());
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(null, "Firestore Error: " + e.getMessage(),
+                    "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    	
+    }
+
 
 }
