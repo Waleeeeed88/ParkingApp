@@ -28,7 +28,10 @@ class ParkingLot implements ParkingComponent {
     // Initialize Parking Lot with 100 Parking Spaces
     private void initializeParkingSpaces() {
         for (int i = 1; i <= 100; i++) {
-            parkingSpaces.add(new ParkingSpace(this.id + i, this.id));
+            // Format 'i' as a 3-digit number (e.g. "001", "010", "100")
+            String paddedNum = String.format("%03d", i);
+            // Now create the ID as "Parking 001", "Parking 002", etc.
+            parkingSpaces.add(new ParkingSpace(this.id + paddedNum, this.id));
         }
     }
 
@@ -105,7 +108,6 @@ class ParkingSpace implements ParkingComponent {
     	return enabled;
     }
 
-
     public boolean isOccupied() {
         return occupied;
     }
@@ -157,26 +159,3 @@ class Sensor {
         }
     }
 }
-
-//// Main Class (Client)
-//public class ParkingSystem {
-//    public static void main(String[] args) {
-//        // Create a parking lot
-//        ParkingLot lot1 = new ParkingLot("Downtown Lot");
-//
-//        // Get some parking spaces
-//        ParkingSpace space1 = (ParkingSpace) lot1.getParkingSpaces().get(0);
-//        ParkingSpace space2 = (ParkingSpace) lot1.getParkingSpaces().get(1);
-//
-//        // Simulating a car entering and leaving
-//        space1.carEnters("ABC-123");
-//        space1.carLeaves();
-//
-//        space2.carEnters("XYZ-789");
-//        space2.carLeaves();
-//
-//        // Disabling a parking lot
-//        lot1.disable();
-//        space2.carEnters("GHI-999");
-//    }
-//}
