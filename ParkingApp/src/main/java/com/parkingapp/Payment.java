@@ -169,13 +169,16 @@ class CreditCardPaymentWindow extends JFrame {
         JPanel panel = new JPanel(new GridLayout(5, 2, 10, 10));
         panel.setBorder(new EmptyBorder(10, 10, 10, 10));
 
-        panel.add(new JLabel("Card Number:"));
+        panel.add(new JLabel("Card Number (16 Digits):"));
         panel.add(new JTextField());
 
-        panel.add(new JLabel("Expiry Date:"));
+        panel.add(new JLabel("Expiry Date (MM/YY):"));
         panel.add(new JTextField());
 
-        panel.add(new JLabel("CVV:"));
+        panel.add(new JLabel("CVV (3 Digits):"));
+        panel.add(new JTextField());
+
+        panel.add(new JLabel("Postal Code:"));
         panel.add(new JTextField());
 
         JButton confirmButton = new JButton("Confirm");
@@ -192,16 +195,22 @@ class CreditCardPaymentWindow extends JFrame {
 class BankTransferPaymentWindow extends JFrame {
     public BankTransferPaymentWindow(DepositPanel parent, double amount) {
         setTitle("Bank Transfer");
-        setSize(350, 200);
+        setSize(350, 300);
         setLocationRelativeTo(null);
 
-        JPanel panel = new JPanel(new GridLayout(4, 2, 10, 10));
+        JPanel panel = new JPanel(new GridLayout(5, 2, 10, 10));
         panel.setBorder(new EmptyBorder(10, 10, 10, 10));
 
         panel.add(new JLabel("Bank Name:"));
         panel.add(new JTextField());
 
         panel.add(new JLabel("Account Number:"));
+        panel.add(new JTextField());
+
+        panel.add(new JLabel("Institution Number:"));
+        panel.add(new JTextField());
+
+        panel.add(new JLabel("Transit Number:"));
         panel.add(new JTextField());
 
         JButton confirmButton = new JButton("Confirm");
