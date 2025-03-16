@@ -10,11 +10,22 @@ public class Payment extends JFrame {
 
     private double userBalance = 0;  // Balance stored
     private String userEmail;
+    private UserLogin.UserType userType;
+    private JLabel userTypeLabel; // Display user type
+    private long durationInMinutes;  // Store booking duration
+    private double amountToPay; // Store calculated payment amount
     private JLabel balanceLabel;
+    private JLabel amountLabel;
 
-    public Payment(String userEmail) {
+    public Payment(String userEmail, UserLogin.UserType userType, long durationInMinutes) {
         this.userEmail = userEmail;
-        setTitle("Payment System");
+        this.userType = userType; // Retrieve user type
+        this.durationInMinutes = durationInMinutes;
+
+        // Calculate amount to pay using PaymentRates
+        this.amountToPay = PaymentRates.calculateCost(userType, durationInMinutes);
+
+        setTitle("Payment System -" + userType);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(400, 250);
         setLocationRelativeTo(null);
@@ -25,6 +36,11 @@ public class Payment extends JFrame {
         balanceLabel = new JLabel("Current Balance: $" + userBalance, JLabel.CENTER);
         balanceLabel.setFont(new Font("Arial", Font.BOLD, 18));
         mainPanel.add(balanceLabel);
+
+        // Display the auto-calculated payment amount
+        amountLabel = new JLabel("Amount Due: $" + amountToPay, JLabel.CENTER);
+        amountLabel.setFont(new Font("Arial", Font.BOLD, 16));
+        mainPanel.add(amountLabel);
 
         JButton depositButton = new JButton("Deposit Funds");
         depositButton.addActionListener(e -> openDepositPanel());
@@ -42,7 +58,7 @@ public class Payment extends JFrame {
     }
 
     private void openPayPanel() {
-        new PayPanel(this).setVisible(true);
+        new PayPanel(this, amountToPay).setVisible(true);
     }
 
     public void updateBalance(double amount) {
@@ -61,7 +77,7 @@ public class Payment extends JFrame {
     }
 
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> new Payment("testuser@example.com").setVisible(true));
+        SwingUtilities.invokeLater(() -> new Payment("testuser@example.com", UserLogin.UserType.STUDENT, 0).setVisible(true));
     }
 }
 
@@ -125,16 +141,20 @@ class DepositPanel extends JFrame {
 class PayPanel extends JFrame {
     private JTextField paymentAmountField;
     private Payment parent;
+    private double amountToPay; // Store calculated amount
 
-    public PayPanel(Payment parent) {
+    public PayPanel(Payment parent, double amountToPay) {
         this.parent = parent;
+        this.amountToPay = amountToPay;
+
         setTitle("Make a Payment");
         setSize(300, 150);
         setLocationRelativeTo(null);
         setLayout(new GridLayout(3, 2, 10, 10));
 
-        add(new JLabel("Enter Payment Amount:"));
-        paymentAmountField = new JTextField();
+        add(new JLabel("Amount to Pay:"));
+        paymentAmountField = new JTextField(String.format("%.2f", amountToPay)); // Pre-fill the amount
+        paymentAmountField.setEnabled(false); // Disable manual input
         add(paymentAmountField);
 
         JButton payButton = new JButton("Pay");
@@ -143,10 +163,10 @@ class PayPanel extends JFrame {
     }
 
     private void processPayment() {
-        double amount;
+        double amountToPay;
         try {
-            amount = Double.parseDouble(paymentAmountField.getText());
-            if (amount <= 0) {
+            amountToPay = Double.parseDouble(paymentAmountField.getText());
+            if (amountToPay <= 0) {
                 JOptionPane.showMessageDialog(this, "Amount must be greater than zero.", "Error", JOptionPane.ERROR_MESSAGE);
                 return;
             }
@@ -155,8 +175,8 @@ class PayPanel extends JFrame {
             return;
         }
 
-        if (parent.deductBalance(amount)) {
-            JOptionPane.showMessageDialog(this, "Payment of $" + amount + " was successful!");
+        if (parent.deductBalance(amountToPay)) {
+            JOptionPane.showMessageDialog(this, "Payment of $" + amountToPay + " was successful!");
             dispose();
         }
     }
@@ -400,7 +420,7 @@ class PayPalPaymentWindow extends JFrame {
         emailField = new JTextField();
         emailField.setPreferredSize(new Dimension(200, 30));  // Set fixed size
         formPanel.add(emailField, gbc);
-        
+
         // Confirm Button (Increased width)
         JButton confirmButton = new JButton("Confirm");
         confirmButton.setPreferredSize(new Dimension(200, 40));  // Set fixed size

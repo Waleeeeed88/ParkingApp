@@ -106,11 +106,12 @@ public class PaymentRates {
         // Convert rounded minutes to hours.
         double hours = roundedMinutes / 60.0;
         
-        // Round the hours to three significant figures.
-        double hoursRounded = Math.round(hours * 1000) / 1000.0;
-        
+        // Round the hours to two decimal figures.
+        double hoursRounded = Math.round(hours * 100) / 100.0;
+
         // Calculate cost using the appropriate strategy.
         RateCalculationStrategy strategy = getStrategy(userType);
         return strategy.calculateCost(hoursRounded);
     }
+    
 }

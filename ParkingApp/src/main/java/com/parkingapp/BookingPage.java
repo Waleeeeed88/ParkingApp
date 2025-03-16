@@ -64,6 +64,7 @@ public class BookingPage extends JFrame {
         titleLabel.setFont(new Font("Arial", Font.BOLD, 20));
         headerPanel.add(titleLabel, BorderLayout.WEST);
 
+
         userTypeLabel = new JLabel("Loading...", SwingConstants.RIGHT);
         userTypeLabel.setFont(new Font("Arial", Font.BOLD, 16));
         headerPanel.add(userTypeLabel, BorderLayout.EAST);
@@ -241,6 +242,7 @@ public class BookingPage extends JFrame {
         startDateTimeUpdater(); // Start the real-time timer
 
         setVisible(true);
+
     }
 
     private void returnToLoginPage() {
@@ -303,6 +305,17 @@ public class BookingPage extends JFrame {
 
     // Booking methods (bookSpace, cancelBooking, editBooking, updateBooking, extendBooking, etc.)
     private void bookSpace() {
+        Preferences prefs = Preferences.userNodeForPackage(UserLogin.class);
+        String userEmail = prefs.get("user_email", null);
+        String userTypeStr = prefs.get("user_type", null);
+
+        if (userEmail == null || userTypeStr == null) {
+            JOptionPane.showMessageDialog(this, "User details not found. Cannot proceed with booking.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        UserLogin.UserType userType = UserLogin.UserType.valueOf(userTypeStr);
+
         String selectedLot = (String) lotSelector.getSelectedItem();
         String selectedSpace = (String) spaceSelector.getSelectedItem();
         String startTime = startTimeField.getText();
@@ -311,7 +324,7 @@ public class BookingPage extends JFrame {
         String carBrand = carBrandField.getText();
 
         if (selectedLot == null || selectedSpace == null || startTime.isEmpty() || endTime.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Please select a lot, space and enter start and end times.", "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Please select a lot, space, and enter start and end times.", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
@@ -354,19 +367,27 @@ public class BookingPage extends JFrame {
 
             // Calculate duration using the BookingDurationCalculator class
             long duration = BookingDurationCalculator.calculateDuration(startTime, endTime);
+
             // Create a new booking with vehicle type, car brand, and duration
             Booking newBooking = new Booking(bookingId, startTime, endTime, vehicleType, carBrand, duration);
             bookings.put(bookingId, newBooking);
+
+            // Display booking details before proceeding to payment
             showBookingDetails();
 
-            JOptionPane.showMessageDialog(this, "Booking successful!\nDuration: " + duration + " minutes", "Success", JOptionPane.INFORMATION_MESSAGE);
-
             clearInputFields();
+
+            // **Open Payment Page After Booking Confirmation**
+            Payment paymentPage = new Payment(userEmail, userType, duration);
+            paymentPage.setVisible(true);
+
+            JOptionPane.showMessageDialog(this, "Booking successful!\nDuration: " + duration + " minutes", "Success", JOptionPane.INFORMATION_MESSAGE);
 
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, "Invalid start time format. Please use HH:MM. (Minutes must be between 0 and 59)", "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
+
 
     private void cancelBooking() {
         String selectedLot = (String) lotSelector.getSelectedItem();
@@ -690,7 +711,7 @@ public class BookingPage extends JFrame {
     }
 
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> new BookingPage());
+        SwingUtilities.invokeLater(() -> new BookingPage().setVisible(true));
     }
 }
 
