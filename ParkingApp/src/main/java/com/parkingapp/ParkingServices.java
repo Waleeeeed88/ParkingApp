@@ -12,6 +12,7 @@ import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.firestore.CollectionReference;
 import com.google.cloud.firestore.DocumentReference;
 import com.google.cloud.firestore.Firestore;
+import com.google.cloud.firestore.QuerySnapshot;
 import com.google.cloud.firestore.SetOptions;
 import com.google.cloud.firestore.WriteBatch;
 import com.google.cloud.firestore.WriteResult;
@@ -74,24 +75,6 @@ public class ParkingServices {
      * 
      * =================================================================
      */
-//    public ParkingLot showAllParkingLots() {
-//    	datab.collection("cities")
-//        .whereEqualTo("capital", true)
-//        .get()
-//        .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-//            @Override
-//            public void onComplete(@NonNull Task<QuerySnapshot> task) {
-//                if (task.isSuccessful()) {
-//                    for (QueryDocumentSnapshot document : task.getResult()) {
-//                        Log.d(TAG, document.getId() + " => " + document.getData());
-//                    }
-//                } else {
-//                    Log.d(TAG, "Error getting documents: ", task.getException());
-//                }
-//            }
-//        });
-//    	
-//    }
     /*
      * ADD LOT TO FIRESTORE DB
      */
@@ -156,41 +139,33 @@ public class ParkingServices {
 
             // Prepare data to update only the lot's status
             Map<String, Object> lotData = new HashMap<>();
-            lotData.put("enabled", parkingLot.isEnabled()); // This should be false now
+            lotData.put("enabled", parkingLot.isEnabled()); // For example, false if disabling
 
-            // Store updated lot status in Firestore
+            // Update the parking lot document in Firestore
             WriteResult lotResult = lotDocRef.set(lotData, SetOptions.merge()).get();
-            System.out.println("Parking Lot " + parkingLot.getId() + " disabled at " + lotResult.getUpdateTime());
+            System.out.println("Parking Lot " + parkingLot.getId() + " updated at " + lotResult.getUpdateTime());
 
-            // Reference to the "parkingSpaces" subcollection
+            // Reference to the subcollection "parkingSpaces" inside the lot document
             CollectionReference spacesCollection = lotDocRef.collection("parkingSpaces");
 
-            // Disable all parking spaces in Firestore
-            List<ApiFuture<WriteResult>> futures = new ArrayList<>();
+            // Create a batch write instance to update all parking spaces at once
+            WriteBatch batch = database.batch();
 
-            // Create a batch write instance
-          
+            // Loop over all parking spaces in the lot and add a set operation to the batch
             for (ParkingComponent space : parkingLot.getParkingSpaces()) {
                 if (space instanceof ParkingSpace) {
                     ParkingSpace ps = (ParkingSpace) space;
-
-                    // Prepare updated data for the parking space
                     Map<String, Object> spaceData = new HashMap<>();
-                    spaceData.put("enabled", ps.isEnabled()); // Should be false now
-
-                    // Update Firestore document for this parking space
-                    ApiFuture<WriteResult> future = spacesCollection.document(ps.getId()).set(spaceData, SetOptions.merge());
-                    futures.add(future);
+                    spaceData.put("enabled", ps.isEnabled()); // Should match the current state (e.g., false)
+                    DocumentReference spaceDocRef = spacesCollection.document(ps.getId());
+                    batch.set(spaceDocRef, spaceData, SetOptions.merge());
                 }
             }
 
-            // Ensure all Firestore writes are completed
-            for (ApiFuture<WriteResult> future : futures) {
-                future.get();
-            }
-
-            System.out.println("All parking spaces under lot " + parkingLot.getId() + " disabled in Firestore.");
-
+            // Commit the batch write, so all parking space updates are sent in one operation
+            List<WriteResult> results = batch.commit().get();
+            System.out.println("Batch update complete: All parking spaces under lot " + parkingLot.getId() + " updated.");
+            
         } catch (Exception e) {
             e.printStackTrace();
             JOptionPane.showMessageDialog(null, "Firestore Error: " + e.getMessage(),
@@ -224,6 +199,5 @@ public class ParkingServices {
         }
     	
     }
-
 
 }
