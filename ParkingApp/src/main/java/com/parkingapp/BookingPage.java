@@ -306,8 +306,8 @@ public class BookingPage extends JFrame {
     // Booking methods (bookSpace, cancelBooking, editBooking, updateBooking, extendBooking, etc.)
     private void bookSpace() {
         Preferences prefs = Preferences.userNodeForPackage(UserLogin.class);
-        String userEmail = prefs.get("user_email", null);
-        String userTypeStr = prefs.get("user_type", null);
+        String userEmail = prefs.get("email", null);
+        String userTypeStr = prefs.get("userType", null);
 
         if (userEmail == null || userTypeStr == null) {
             JOptionPane.showMessageDialog(this, "User details not found. Cannot proceed with booking.", "Error", JOptionPane.ERROR_MESSAGE);
