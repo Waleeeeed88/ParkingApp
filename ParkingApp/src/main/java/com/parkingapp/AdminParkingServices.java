@@ -38,7 +38,7 @@ public class AdminParkingServices {
         frame = new JFrame("Parking Services");
         frame.setSize(500, 500);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setLayout(new GridLayout(2, 1));
+        frame.setLayout(new GridLayout(3, 1));
 
         // Panel for Parking Lots
         JPanel lotPanel = new JPanel();
