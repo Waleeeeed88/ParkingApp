@@ -309,86 +309,129 @@ public class BookingPage extends JFrame {
     private void bookSpace() {
         String selectedLot = (String) lotSelector.getSelectedItem();
         String selectedSpace = (String) spaceSelector.getSelectedItem();
-        String startTime = startTimeField.getText();
-        String endTime = endTimeField.getText();
+        String startTime = startTimeField.getText().trim();
+        String endTime = endTimeField.getText().trim();
         String vehicleType = (String) vehicleTypeSelector.getSelectedItem();
-        String carBrand = carBrandField.getText();
+        String carBrand = carBrandField.getText().trim();
+        String licensePlate = licensePlateField.getText().trim();
 
-        if (selectedLot == null || selectedSpace == null || startTime.isEmpty() || endTime.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Please select a lot, space and enter start and end times.", "Error", JOptionPane.ERROR_MESSAGE);
+        // --- Basic Input Validation ---
+        if (selectedLot == null || selectedSpace == null || startTime.isEmpty() ||
+                endTime.isEmpty() || licensePlate.isEmpty()) {
+            JOptionPane.showMessageDialog(this,
+                    "Please select a lot, space, enter start/end times, and provide a license plate.",
+                    "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
-        // --- License Plate Verification ---
-        String licensePlate = JOptionPane.showInputDialog(this, "Enter license plate (Format: 5 alphanumeric, 1 letter, 1 digit):");
-        if (licensePlate == null || licensePlate.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "License plate is required.", "Error", JOptionPane.ERROR_MESSAGE);
-            return;
-        }
         if (!licensePlate.matches("^[A-Za-z0-9]{5}[A-Za-z][0-9]$")) {
-            JOptionPane.showMessageDialog(this, "Invalid license plate format. It must be 7 characters, with the 6th being a letter and the 7th a digit.", "Error", JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-        // --- End License Plate Verification ---
-
-        // Combine lot and space for booking identifier.
-        String bookingId = selectedLot + " - " + selectedSpace;
-
-        if (bookings.containsKey(bookingId)) {
-            JOptionPane.showMessageDialog(this, "Space already booked.", "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this,
+                    "Invalid license plate format. It must be 7 characters, with the 6th being a letter and the 7th a digit.",
+                    "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
-        LocalDateTime nowToronto = LocalDateTime.now();
-        LocalDateTime nowRounded = nowToronto.minusSeconds(nowToronto.getSecond()).minusNanos(nowToronto.getNano());
-        LocalDateTime earliestBookingTime = nowRounded.plusMinutes(15);
-
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
         try {
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
-            LocalTime enteredStartTime = LocalTime.parse(startTime, formatter);
-            LocalDateTime bookingStartTime = LocalDateTime.now().with(enteredStartTime)
-                    .withDayOfYear(nowToronto.getDayOfYear())
-                    .withYear(nowToronto.getYear());
+            LocalTime.parse(startTime, formatter);
+            LocalTime.parse(endTime, formatter);
+        } catch (DateTimeParseException e) {
+            JOptionPane.showMessageDialog(this,
+                    "Invalid time format. Please use HH:MM. (Minutes must be between 0 and 59)",
+                    "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
 
+        // --- Booking Time Constraint (15 minutes in advance) ---
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime nowRounded = now.minusSeconds(now.getSecond()).minusNanos(now.getNano());
+        LocalDateTime earliestBookingTime = nowRounded.plusMinutes(15);
+        LocalDateTime bookingStartTime;
+        try {
+            LocalTime enteredStartTime = LocalTime.parse(startTime, formatter);
+            bookingStartTime = LocalDateTime.now().withHour(enteredStartTime.getHour())
+                    .withMinute(enteredStartTime.getMinute()).withSecond(0).withNano(0);
             if (bookingStartTime.isBefore(earliestBookingTime)) {
-                DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
-                JOptionPane.showMessageDialog(this, "Booking can only be made 15 minutes from the current time ("
-                        + earliestBookingTime.format(timeFormatter) + " or later).", "Error", JOptionPane.ERROR_MESSAGE);
+                String earliestStr = earliestBookingTime.format(DateTimeFormatter.ofPattern("HH:mm"));
+                JOptionPane.showMessageDialog(this,
+                        "Booking can only be made 15 minutes from now (" + earliestStr + " or later).",
+                        "Error", JOptionPane.ERROR_MESSAGE);
                 return;
             }
-
-            // Calculate duration using BookingDurationCalculator.
-            long duration = BookingDurationCalculator.calculateDuration(startTime, endTime);
-            // Create a new booking with vehicle type, car brand, and duration.
-            Booking newBooking = new Booking(bookingId, startTime, endTime, vehicleType, carBrand, duration);
-            bookings.put(bookingId, newBooking);
-            showBookingDetails();
-
-            JOptionPane.showMessageDialog(this, "Booking successful!\nDuration: " + duration + " minutes", "Success", JOptionPane.INFORMATION_MESSAGE);
-            clearInputFields();
-
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "Invalid start time format. Please use HH:MM. (Minutes must be between 0 and 59)", "Error", JOptionPane.ERROR_MESSAGE);
+        } catch (DateTimeParseException e) {
+            JOptionPane.showMessageDialog(this,
+                    "Invalid start time format. Please use HH:MM.",
+                    "Error", JOptionPane.ERROR_MESSAGE);
+            return;
         }
-    }
 
-    private void cancelBooking() {
-        String selectedLot = (String) lotSelector.getSelectedItem();
-        String selectedSpace = (String) spaceSelector.getSelectedItem();
-        String bookingId = selectedLot + " - " + selectedSpace;
-        if (bookings.containsKey(bookingId)) {
-            int confirm = JOptionPane.showConfirmDialog(this,
-                    "Are you sure you want to cancel the booking for " + bookingId + "?",
-                    "Confirm Cancellation",
-                    JOptionPane.YES_NO_OPTION);
-            if (confirm == JOptionPane.YES_OPTION) {
-                bookings.remove(bookingId);
-                showBookingDetails();
-                JOptionPane.showMessageDialog(this, "Booking cancelled!", "Success", JOptionPane.INFORMATION_MESSAGE);
-                clearInputFields();
+        // --- Check for Overlapping Bookings ---
+        if (isSpaceBooked(selectedLot, selectedSpace, startTime, endTime, null)) {
+            JOptionPane.showMessageDialog(this,
+                    "This space is already booked for the selected time.",
+                    "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        // --- Proceed with Booking ---
+        long duration = BookingDurationCalculator.calculateDuration(startTime, endTime);
+        String bookingId = selectedLot + "_" + selectedSpace + "_" + UUID.randomUUID().toString();
+
+        // Create the Booking object for local use (if needed)
+        Booking newBooking = new Booking(selectedLot + " - " + selectedSpace,
+                startTime, endTime, vehicleType, carBrand, duration, licensePlate);
+
+        // --- Prepare Data for Firestore ---
+        Firestore db = FirestoreClient.getFirestore();
+        DocumentReference bookingRef = db.collection("bookings").document(bookingId);
+        Map<String, Object> bookingData = new HashMap<>();
+        bookingData.put("lot", selectedLot);
+        bookingData.put("space", selectedSpace);
+        bookingData.put("startTime", startTime);
+        bookingData.put("endTime", endTime);
+        bookingData.put("vehicleType", vehicleType);
+        bookingData.put("carBrand", carBrand);
+        bookingData.put("duration", duration);
+        bookingData.put("licensePlate", licensePlate);
+        bookingData.put("status", "booked");
+
+        // --- NEW: Retrieve User Email and User Type ---
+        Preferences prefs = Preferences.userNodeForPackage(UserLogin.class);
+        String uid = prefs.get("user_uid", null);
+        String userEmail = "unknown";
+        String userType = "unknown";
+        if (uid != null) {
+            try {
+                DocumentReference userRef = db.collection("users").document(uid);
+                DocumentSnapshot userSnap = userRef.get().get();
+                if (userSnap.exists()) {
+                    userEmail = userSnap.getString("email");
+                    userType = userSnap.getString("userType");
+                }
+            } catch (InterruptedException | ExecutionException e) {
+                e.printStackTrace();
             }
-        } else {
-            JOptionPane.showMessageDialog(this, "No booking found for the selected space.", "Error", JOptionPane.ERROR_MESSAGE);
+        }
+        bookingData.put("userEmail", userEmail);
+        bookingData.put("userType", userType);
+        // --- END NEW CODE ---
+
+        ApiFuture<WriteResult> future = bookingRef.set(bookingData);
+        try {
+            WriteResult result = future.get(); // Wait for the write to complete
+            System.out.println("Booking written at: " + result.getUpdateTime());
+            // Update local booking map and UI
+            realTimeBookings.put(bookingId, newBooking);
+            showBookingDetails();
+            JOptionPane.showMessageDialog(this,
+                    "Booking successful!\nDuration: " + duration + " minutes",
+                    "Success", JOptionPane.INFORMATION_MESSAGE);
+            clearInputFields();
+        } catch (InterruptedException | ExecutionException e) {
+            System.err.println("Error writing booking to Firestore: " + e.getMessage());
+            JOptionPane.showMessageDialog(this,
+                    "Error booking space: " + e.getMessage(),
+                    "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
