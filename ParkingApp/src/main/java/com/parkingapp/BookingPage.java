@@ -56,6 +56,8 @@ public class BookingPage extends JFrame {
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern(TIME_FORMAT);
     private static final int MIN_BOOKING_ADVANCE_MINUTES = 15;
     private static final String LICENSE_PLATE_REGEX = "^[A-Za-z0-9]{5}[A-Za-z][0-9]$";
+    private String currentUserType;
+    private String currentUserEmail;  // NEW
 
 
     // UI Components
@@ -272,28 +274,31 @@ public class BookingPage extends JFrame {
                 try {
                     Preferences prefs = Preferences.userNodeForPackage(BookingPage.class);
                     String uid = prefs.get(USER_UID_PREF_KEY, null);
-                    if (uid == null) {
-                        return "Guest";
-                    }
+                    if (uid == null) return "Guest";
+
                     DocumentReference docRef = db.collection(USER_COLLECTION).document(uid);
-                    DocumentSnapshot docSnap = docRef.get().get(); // Get the future and then get the result
+                    DocumentSnapshot docSnap = docRef.get().get();
+
                     if (docSnap.exists() && docSnap.contains(USER_TYPE_FIELD)) {
-                        return docSnap.getString(USER_TYPE_FIELD);
+                        currentUserType = docSnap.getString(USER_TYPE_FIELD);
+                        currentUserEmail = docSnap.getString(EMAIL_FIELD);  // Capture email
+                        return currentUserType;
                     }
                     return "Undefined";
                 } catch (InterruptedException | ExecutionException e) {
                     Thread.currentThread().interrupt();
-                    return "Error: " + e.getMessage(); // Return error message
+                    return "Error: " + e.getMessage();
                 }
             }
 
             @Override
             protected void done() {
                 try {
-                    String userType = get(); // Get result of doInBackground
+                    String userType = get();
                     userTypeLabel.setText(userType.toUpperCase());
                 } catch (Exception ex) {
-                    handleUserTypeError("Error loading user type", ex);
+                    ex.printStackTrace();
+                    userTypeLabel.setText("Error");
                 }
             }
         };
@@ -429,19 +434,69 @@ public class BookingPage extends JFrame {
             return;
         }
 
-        // --- Proceed with Booking ---
+        // Calculate duration
         long duration = BookingDurationCalculator.calculateDuration(startTime, endTime);
+
+        // Build your new Booking object
         String bookingId = selectedLot + "_" + selectedSpace + "_" + UUID.randomUUID();
+        Booking newBooking = new Booking(
+                selectedLot + " - " + selectedSpace,
+                startTime,
+                endTime,
+                vehicleType,
+                carBrand,
+                duration,
+                licensePlate
+        );
 
-        Booking newBooking = new Booking(selectedLot + " - " + selectedSpace,
-                startTime, endTime, vehicleType, carBrand, duration, licensePlate);
+        // Prepare data for Firestore (status = "booked" set later)
+        Map<String, Object> bookingData = new HashMap<>();
+        bookingData.put(LOT_FIELD, selectedLot);
+        bookingData.put(SPACE_FIELD, selectedSpace);
+        bookingData.put(START_TIME_FIELD, startTime);
+        bookingData.put(END_TIME_FIELD, endTime);
+        bookingData.put(VEHICLE_TYPE_FIELD, vehicleType);
+        bookingData.put(CAR_BRAND_FIELD, carBrand);
+        bookingData.put(DURATION_FIELD, duration);
+        bookingData.put(LICENSE_PLATE_FIELD, licensePlate);
+        bookingData.put(STATUS_FIELD, BOOKED_STATUS);  // We'll finalize after payment
 
-        // Prepare data for Firestore (including user email and type)
-        Map<String, Object> bookingData = prepareBookingData(selectedLot, selectedSpace, startTime,
-                endTime, vehicleType, carBrand, duration, licensePlate);
+        // Insert user info
+        bookingData.put(USER_EMAIL_FIELD, currentUserEmail != null ? currentUserEmail : USER_TYPE_UNKNOWN);
+        bookingData.put(USER_TYPE_FIELD, currentUserType != null ? currentUserType : USER_TYPE_UNKNOWN);
 
-        writeBookingToFirestore(bookingId, bookingData, newBooking);
+        // Now, instead of calling Firestore here, open the Payment page:
+        // For example:
+        double amountDue = PaymentRates.calculateCost(
+                UserLogin.UserType.valueOf(currentUserType.toUpperCase()),
+                duration
+        );
+        // Example: inside bookSpace(), after verifying no overlap:
+
+        PaymentPage paymentDialog = new PaymentPage(
+                /* parent frame */ this,
+                currentUserEmail,                       // or however you store the user's email
+                UserLogin.UserType.valueOf(currentUserType.toUpperCase()),
+                duration,
+                (wasPaid) -> {
+                    if (wasPaid) {
+                        // Payment was successful -> finalize the booking in Firestore
+                        finalizeBooking(bookingData, newBooking, bookingId);
+                    } else {
+                        // Payment canceled or failed
+                        JOptionPane.showMessageDialog(
+                                BookingPage.this,
+                                "Payment cancelled or failed. Booking NOT finalized.",
+                                "Payment Cancelled",
+                                JOptionPane.WARNING_MESSAGE
+                        );
+                    }
+                }
+        );
+
+        paymentDialog.setVisible(true);
     }
+
 
     private Map<String, Object> prepareBookingData(String lot, String space, String startTime,
                                                    String endTime, String vehicleType, String carBrand,long duration, String licensePlate) {
@@ -816,6 +871,40 @@ public class BookingPage extends JFrame {
         } catch (DateTimeParseException e) {
             return false; // Should have been caught by isValidTimeFormat
         }
+    }
+    /**
+     * Called only AFTER successful payment
+     */
+    public void finalizeBooking(Map<String, Object> bookingData, Booking newBooking, String bookingId) {
+        SwingWorker<Void, Void> worker = new SwingWorker<>() {
+            @Override
+            protected Void doInBackground() throws Exception {
+                DocumentReference bookingRef = db.collection(BOOKING_COLLECTION).document(bookingId);
+                ApiFuture<WriteResult> future = bookingRef.set(bookingData);
+                future.get(); // Wait for write to complete
+                return null;
+            }
+
+            @Override
+            protected void done() {
+                try {
+                    get(); // Check for exceptions
+                    // Store it in our local map
+                    realTimeBookings.put(bookingId, newBooking);
+                    showBookingDetails();
+                    JOptionPane.showMessageDialog(BookingPage.this,
+                            "Booking successful!\nDuration: " + newBooking.getDuration() + " minutes",
+                            "Success", JOptionPane.INFORMATION_MESSAGE);
+                    clearInputFields();
+                } catch (InterruptedException | ExecutionException e) {
+                    e.printStackTrace();
+                    JOptionPane.showMessageDialog(BookingPage.this,
+                            "Error finalizing booking: " + e.getMessage(),
+                            "Booking Error", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        };
+        worker.execute();
     }
 
 
