@@ -1,14 +1,14 @@
 package com.parkingapp;
 
 import com.google.auth.oauth2.GoogleCredentials;
+import com.google.api.core.ApiFuture;
 import com.google.cloud.firestore.DocumentReference;
 import com.google.cloud.firestore.DocumentSnapshot;
 import com.google.cloud.firestore.Firestore;
+import com.google.cloud.firestore.WriteResult;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
 import com.google.firebase.cloud.FirestoreClient;
-
-import services.FirebaseInitialization;
 
 import javax.swing.Timer;
 import javax.swing.*;
@@ -22,11 +22,12 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.*;
+import java.util.concurrent.ExecutionException;
 import java.util.prefs.Preferences;
 
 public class BookingPage extends JFrame {
 
-    // New drop down for parking lots
+    // Drop down for parking lots
     private JComboBox<String> lotSelector;
     // Drop down for parking spaces (within a selected lot)
     private JComboBox<String> spaceSelector;
@@ -34,20 +35,20 @@ public class BookingPage extends JFrame {
     private JTextField endTimeField;
     // Drop down for vehicle type (e.g., SUV, Sedan, etc.)
     private JComboBox<String> vehicleTypeSelector;
-    // New free-form text field for car brand
+    // Free-form text field for car brand
     private JTextField carBrandField;
 
     private JTextArea bookingDetailsArea;
     private JButton bookButton, cancelButton, editButton, extendButton, returnButton;
     private JLabel userTypeLabel;
-
     private final Map<String, Booking> bookings = new HashMap<>();
-    // This map will store the parking spaces for each lot.
+    // Map storing the parking spaces for each lot.
     private Map<String, List<String>> parkingLotSpaces = new HashMap<>();
 
     // Listener for the book button.
     private ActionListener bookButtonActionListener;
-    private JLabel realTimeLabel; // Label to display the real-time
+    private JLabel realTimeLabel; // Label to display the current time
+    private static final String TAG = "BookingUpdate";
 
     public BookingPage() {
         setTitle("Parking Space Booking");
@@ -55,28 +56,30 @@ public class BookingPage extends JFrame {
         setSize(600, 550);
         setLocationRelativeTo(null);
 
-        // Create panels
+        initializeFirebase();
+
+        // Create main panel with border layout.
         JPanel mainPanel = new JPanel(new BorderLayout());
         mainPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
 
+        // Header panel with title and user type.
         JPanel headerPanel = new JPanel(new BorderLayout());
         JLabel titleLabel = new JLabel("Booking Page");
         titleLabel.setFont(new Font("Arial", Font.BOLD, 20));
         headerPanel.add(titleLabel, BorderLayout.WEST);
-
 
         userTypeLabel = new JLabel("Loading...", SwingConstants.RIGHT);
         userTypeLabel.setFont(new Font("Arial", Font.BOLD, 16));
         headerPanel.add(userTypeLabel, BorderLayout.EAST);
         mainPanel.add(headerPanel, BorderLayout.NORTH);
 
-        // Create the input panel with GridBagLayout for the form fields.
+        // Input panel with GridBagLayout.
         JPanel inputPanel = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 5, 5, 5);
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
-        // Row 0: Parking Lot drop down
+        // Row 0: Parking Lot drop down.
         JLabel lotLabel = new JLabel("Select Lot:");
         lotLabel.setFont(new Font("Arial", Font.BOLD, 14));
         gbc.gridx = 0;
@@ -91,10 +94,10 @@ public class BookingPage extends JFrame {
         gbc.weightx = 1.0;
         inputPanel.add(lotSelector, gbc);
 
-        // Add action listener to update spaces when a lot is selected
+        // Update spaces when a lot is selected.
         lotSelector.addActionListener(e -> updateSpaceSelectorForSelectedLot());
 
-        // Row 1: Parking Space drop down (shows spaces for selected lot)
+        // Row 1: Parking Space drop down.
         JLabel spaceLabel = new JLabel("Select Space:");
         spaceLabel.setFont(new Font("Arial", Font.BOLD, 14));
         gbc.gridx = 0;
@@ -109,7 +112,7 @@ public class BookingPage extends JFrame {
         gbc.weightx = 1.0;
         inputPanel.add(spaceSelector, gbc);
 
-        // Row 2: Real-time display
+        // Row 2: Real-time display.
         JLabel realTimeTitleLabel = new JLabel("Current Time:");
         realTimeTitleLabel.setFont(new Font("Arial", Font.BOLD, 14));
         gbc.gridx = 0;
@@ -124,7 +127,7 @@ public class BookingPage extends JFrame {
         gbc.weightx = 1.0;
         inputPanel.add(realTimeLabel, gbc);
 
-        // Row 3: Start time field
+        // Row 3: Start time field.
         JLabel startTimeLabel = new JLabel("Start Time (HH:MM):");
         startTimeLabel.setFont(new Font("Arial", Font.BOLD, 14));
         gbc.gridx = 0;
@@ -139,7 +142,7 @@ public class BookingPage extends JFrame {
         gbc.weightx = 1.0;
         inputPanel.add(startTimeField, gbc);
 
-        // Row 4: End time field
+        // Row 4: End time field.
         JLabel endTimeLabel = new JLabel("End Time (HH:MM):");
         endTimeLabel.setFont(new Font("Arial", Font.BOLD, 14));
         gbc.gridx = 0;
@@ -154,7 +157,7 @@ public class BookingPage extends JFrame {
         gbc.weightx = 1.0;
         inputPanel.add(endTimeField, gbc);
 
-        // Row 5: Vehicle Type drop down
+        // Row 5: Vehicle Type drop down.
         JLabel vehicleTypeLabel = new JLabel("Vehicle Type:");
         vehicleTypeLabel.setFont(new Font("Arial", Font.BOLD, 14));
         gbc.gridx = 0;
@@ -164,7 +167,6 @@ public class BookingPage extends JFrame {
 
         vehicleTypeSelector = new JComboBox<>();
         vehicleTypeSelector.setFont(new Font("Arial", Font.PLAIN, 14));
-        // Add options for vehicle type
         vehicleTypeSelector.addItem("SUV");
         vehicleTypeSelector.addItem("Sedan");
         vehicleTypeSelector.addItem("Convertible");
@@ -175,7 +177,7 @@ public class BookingPage extends JFrame {
         gbc.weightx = 1.0;
         inputPanel.add(vehicleTypeSelector, gbc);
 
-        // Row 6: Free-form Car Brand text field
+        // Row 6: Car Brand text field.
         JLabel carBrandLabel = new JLabel("Car Brand:");
         carBrandLabel.setFont(new Font("Arial", Font.BOLD, 14));
         gbc.gridx = 0;
@@ -190,7 +192,7 @@ public class BookingPage extends JFrame {
         gbc.weightx = 1.0;
         inputPanel.add(carBrandField, gbc);
 
-        // Row 7: Booking details text area with scroll pane
+        // Row 7: Booking details text area with scroll pane.
         bookingDetailsArea = new JTextArea(10, 30);
         bookingDetailsArea.setEditable(false);
         bookingDetailsArea.setFont(new Font("Arial", Font.PLAIN, 14));
@@ -204,7 +206,7 @@ public class BookingPage extends JFrame {
 
         mainPanel.add(inputPanel, BorderLayout.CENTER);
 
-        // Button panel
+        // Button panel.
         JPanel buttonPanel = new JPanel(new FlowLayout());
         bookButton = new JButton("Book Space");
         bookButton.setFont(new Font("Arial", Font.BOLD, 14));
@@ -217,7 +219,7 @@ public class BookingPage extends JFrame {
         returnButton = new JButton("Return");
         returnButton.setFont(new Font("Arial", Font.BOLD, 14));
 
-        bookButtonActionListener = e -> bookSpace(); // Initialize the listener
+        bookButtonActionListener = e -> bookSpace();
 
         buttonPanel.add(bookButton);
         buttonPanel.add(cancelButton);
@@ -238,11 +240,10 @@ public class BookingPage extends JFrame {
 
         showBookingDetails();
         loadUserType();
-        loadParkingLotsAndSpacesInRealTime(); // Start the real-time listeners
-        startDateTimeUpdater(); // Start the real-time timer
+        loadParkingLotsAndSpacesInRealTime(); // Start real-time listeners.
+        startDateTimeUpdater(); // Start the timer for the real-time clock.
 
         setVisible(true);
-
     }
 
     private void returnToLoginPage() {
@@ -251,6 +252,25 @@ public class BookingPage extends JFrame {
         loginPage.setVisible(true);
     }
 
+    private void initializeFirebase() {
+        try {
+            InputStream serviceAccount = getClass().getClassLoader().getResourceAsStream("google-services.json");
+            if (serviceAccount == null) {
+                throw new IOException("google-services.json not found in resources");
+            }
+            FirebaseOptions options = new FirebaseOptions.Builder()
+                    .setCredentials(GoogleCredentials.fromStream(serviceAccount))
+                    .build();
+
+            if (FirebaseApp.getApps().isEmpty()) {
+                FirebaseApp.initializeApp(options);
+            }
+        } catch (IOException e) {
+            System.out.println("ERROR: invalid service account credentials. See the README.");
+            System.out.println(e.getMessage());
+            JOptionPane.showMessageDialog(this, "Firebase initialization failed: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
 
     private void loadUserType() {
         new SwingWorker<String, Void>() {
@@ -261,8 +281,7 @@ public class BookingPage extends JFrame {
                 if (uid == null) {
                     return "Guest";
                 }
-            	Firestore db = FirebaseInitialization.getInstance();	//instance held in database
-
+                Firestore db = FirestoreClient.getFirestore();
                 DocumentReference docRef = db.collection("users").document(uid);
                 DocumentSnapshot docSnap = docRef.get().get();
                 if (docSnap.exists() && docSnap.contains("userType")) {
@@ -285,19 +304,9 @@ public class BookingPage extends JFrame {
         }.execute();
     }
 
-    // Booking methods (bookSpace, cancelBooking, editBooking, updateBooking, extendBooking, etc.)
+    // Booking methods
+
     private void bookSpace() {
-        Preferences prefs = Preferences.userNodeForPackage(UserLogin.class);
-        String userEmail = prefs.get("email", null);
-        String userTypeStr = prefs.get("userType", null);
-
-        if (userEmail == null || userTypeStr == null) {
-            JOptionPane.showMessageDialog(this, "User details not found. Cannot proceed with booking.", "Error", JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-
-        UserLogin.UserType userType = UserLogin.UserType.valueOf(userTypeStr);
-
         String selectedLot = (String) lotSelector.getSelectedItem();
         String selectedSpace = (String) spaceSelector.getSelectedItem();
         String startTime = startTimeField.getText();
@@ -306,7 +315,7 @@ public class BookingPage extends JFrame {
         String carBrand = carBrandField.getText();
 
         if (selectedLot == null || selectedSpace == null || startTime.isEmpty() || endTime.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Please select a lot, space, and enter start and end times.", "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Please select a lot, space and enter start and end times.", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
@@ -322,7 +331,7 @@ public class BookingPage extends JFrame {
         }
         // --- End License Plate Verification ---
 
-        // Combine lot and space for booking identifier
+        // Combine lot and space for booking identifier.
         String bookingId = selectedLot + " - " + selectedSpace;
 
         if (bookings.containsKey(bookingId)) {
@@ -343,33 +352,25 @@ public class BookingPage extends JFrame {
 
             if (bookingStartTime.isBefore(earliestBookingTime)) {
                 DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm");
-                JOptionPane.showMessageDialog(this, "Booking can only be made 15 minutes from the current time (" + earliestBookingTime.format(timeFormatter) + " or later).", "Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Booking can only be made 15 minutes from the current time ("
+                        + earliestBookingTime.format(timeFormatter) + " or later).", "Error", JOptionPane.ERROR_MESSAGE);
                 return;
             }
 
-            // Calculate duration using the BookingDurationCalculator class
+            // Calculate duration using BookingDurationCalculator.
             long duration = BookingDurationCalculator.calculateDuration(startTime, endTime);
-
-            // Create a new booking with vehicle type, car brand, and duration
+            // Create a new booking with vehicle type, car brand, and duration.
             Booking newBooking = new Booking(bookingId, startTime, endTime, vehicleType, carBrand, duration);
             bookings.put(bookingId, newBooking);
-
-            // Display booking details before proceeding to payment
             showBookingDetails();
 
-            clearInputFields();
-
-            // **Open Payment Page After Booking Confirmation**
-            Payment paymentPage = new Payment(userEmail, userType, duration);
-            paymentPage.setVisible(true);
-
             JOptionPane.showMessageDialog(this, "Booking successful!\nDuration: " + duration + " minutes", "Success", JOptionPane.INFORMATION_MESSAGE);
+            clearInputFields();
 
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, "Invalid start time format. Please use HH:MM. (Minutes must be between 0 and 59)", "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
-
 
     private void cancelBooking() {
         String selectedLot = (String) lotSelector.getSelectedItem();
@@ -441,7 +442,7 @@ public class BookingPage extends JFrame {
         existingBooking.setEndTime(endTime);
         existingBooking.setVehicleType(vehicleType);
         existingBooking.setCarBrand(carBrand);
-        // Recalculate duration on update
+        // Recalculate duration.
         long duration = BookingDurationCalculator.calculateDuration(startTime, endTime);
         existingBooking.setDuration(duration);
 
@@ -454,6 +455,7 @@ public class BookingPage extends JFrame {
         JOptionPane.showMessageDialog(this, "Booking updated!", "Success", JOptionPane.INFORMATION_MESSAGE);
 
         bookButton.setText("Book Space");
+        // Reset to the original book button action.
         bookButton.removeActionListener(bookButton.getActionListeners()[0]);
         bookButton.addActionListener(bookButtonActionListener);
         cancelButton.setEnabled(true);
@@ -483,11 +485,30 @@ public class BookingPage extends JFrame {
             return;
         }
         currentBooking.setEndTime(newEndTime);
-        // Update the duration after extension
+        // Update the duration after extension.
         long duration = BookingDurationCalculator.calculateDuration(currentBooking.getStartTime(), newEndTime);
         currentBooking.setDuration(duration);
         showBookingDetails();
         JOptionPane.showMessageDialog(this, "Booking extended!", "Success", JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    // New method to update the Firestore database with the booked space.
+    private void updateBookingWithSpace(String bookingId, String bookedSpace) {
+        Firestore db = FirestoreClient.getFirestore();
+        DocumentReference bookingRef = db.collection("bookings").document(bookingId);
+
+        // Prepare the update data.
+        Map<String, Object> updates = new HashMap<>();
+        updates.put("bookedSpace", bookedSpace);
+        updates.put("status", "booked");
+
+        ApiFuture<WriteResult> future = bookingRef.update(updates);
+        try {
+            WriteResult result = future.get();
+            System.out.println("Booking updated successfully with space: " + bookedSpace + " at " + result.getUpdateTime());
+        } catch (InterruptedException | ExecutionException e) {
+            System.err.println("Error updating booking: " + e.getMessage());
+        }
     }
 
     private void showBookingDetails() {
@@ -512,9 +533,8 @@ public class BookingPage extends JFrame {
         carBrandField.setText("");
     }
 
-
     /**
-     * This method updates the spaces drop down for the currently selected lot.
+     * Updates the spaces drop down for the currently selected lot.
      */
     private void updateSpaceSelectorForSelectedLot() {
         String selectedLot = (String) lotSelector.getSelectedItem();
@@ -546,42 +566,47 @@ public class BookingPage extends JFrame {
      * Sets up real-time listeners on the Parking_spaces collection and its parkingSpaces subcollections.
      */
     private void loadParkingLotsAndSpacesInRealTime() {
-    	Firestore db = FirebaseInitialization.getInstance();	//instance held in database
+        Firestore db = FirestoreClient.getFirestore();
+
         db.collection("Parking_spaces")
                 .addSnapshotListener((lotSnapshots, e) -> {
                     if (e != null) {
                         System.err.println("Listen for parking lots failed: " + e);
                         return;
                     }
-                    for (DocumentSnapshot lotDoc : lotSnapshots) {
-                        if (lotDoc.exists()) {
-                            String lotId = lotDoc.getId();
-                            System.out.println("Found parking lot: " + lotId);
-                            parkingLotSpaces.putIfAbsent(lotId, new ArrayList<>());
-                            lotDoc.getReference().collection("parkingSpaces")
-                                    .addSnapshotListener((spaceSnapshots, ex) -> {
-                                        if (ex != null) {
-                                            System.err.println("Listen for parking spaces in " + lotId + " failed: " + ex);
-                                            return;
-                                        }
-                                        List<String> spaceList = new ArrayList<>();
-                                        for (DocumentSnapshot spaceDoc : spaceSnapshots) {
-                                            if (spaceDoc.exists()) {
-                                                String spaceId = spaceDoc.getId();
-                                                spaceList.add(spaceId);
-                                                System.out.println("  Found space: " + spaceId + " in lot: " + lotId);
+                    if (lotSnapshots != null) {
+                        for (DocumentSnapshot lotDoc : lotSnapshots) {
+                            if (lotDoc.exists()) {
+                                String lotId = lotDoc.getId();
+                                System.out.println("Found parking lot: " + lotId);
+                                parkingLotSpaces.putIfAbsent(lotId, new ArrayList<>());
+                                lotDoc.getReference().collection("parkingSpaces")
+                                        .addSnapshotListener((spaceSnapshots, ex) -> {
+                                            if (ex != null) {
+                                                System.err.println("Listen for parking spaces in " + lotId + " failed: " + ex);
+                                                return;
                                             }
-                                        }
-                                        parkingLotSpaces.put(lotId, spaceList);
-                                        System.out.println("Updated spaces for " + lotId + ": " + spaceList);
-                                        updateLotSelector();
-                                    });
-                        } else {
-                            System.out.println("Parking lot document does not exist.");
+                                            List<String> spaceList = new ArrayList<>();
+                                            if (spaceSnapshots != null) {
+                                                for (DocumentSnapshot spaceDoc : spaceSnapshots) {
+                                                    if (spaceDoc.exists()) {
+                                                        String spaceId = spaceDoc.getId();
+                                                        spaceList.add(spaceId);
+                                                        System.out.println("  Found space: " + spaceId + " in lot: " + lotId);
+                                                    }
+                                                }
+                                            }
+                                            parkingLotSpaces.put(lotId, spaceList);
+                                            System.out.println("Updated spaces for " + lotId + ": " + spaceList);
+                                            updateLotSelector();
+                                        });
+                            } else {
+                                System.out.println("Parking lot document does not exist.");
+                            }
                         }
-                    }
-                    if (lotSnapshots.isEmpty()) {
-                        System.out.println("No parking lot documents found.");
+                        if (lotSnapshots.isEmpty()) {
+                            System.out.println("No parking lot documents found.");
+                        }
                     }
                 });
     }
@@ -596,11 +621,108 @@ public class BookingPage extends JFrame {
     }
 
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> new BookingPage().setVisible(true));
+        SwingUtilities.invokeLater(() -> new BookingPage());
+    }
+
+    // Inner Booking class to store booking details.
+    private class Booking {
+        private String space; // Combined "Lot - Space" identifier.
+        private String startTime;
+        private String endTime;
+        private String vehicleType;
+        private String carBrand;
+        private long duration; // Duration in minutes
+
+        public Booking(String space, String startTime, String endTime, String vehicleType, String carBrand, long duration) {
+            this.space = space;
+            this.startTime = startTime;
+            this.endTime = endTime;
+            this.vehicleType = vehicleType;
+            this.carBrand = carBrand;
+            this.duration = duration;
+        }
+
+        public String getSpace() {
+            return space;
+        }
+
+        public String getStartTime() {
+            return startTime;
+        }
+
+        public String getEndTime() {
+            return endTime;
+        }
+
+        public String getVehicleType() {
+            return vehicleType;
+        }
+
+        public String getCarBrand() {
+            return carBrand;
+        }
+
+        public long getDuration() {
+            return duration;
+        }
+
+        public void setSpace(String space) {
+            this.space = space;
+        }
+
+        public void setStartTime(String startTime) {
+            this.startTime = startTime;
+        }
+
+        public void setEndTime(String endTime) {
+            this.endTime = endTime;
+        }
+
+        public void setVehicleType(String vehicleType) {
+            this.vehicleType = vehicleType;
+        }
+
+        public void setCarBrand(String carBrand) {
+            this.carBrand = carBrand;
+        }
+
+        public void setDuration(long duration) {
+            this.duration = duration;
+        }
+
+        @Override
+        public String toString() {
+            return "Booking Details:\n" +
+                    "-------------------\n" +
+                    "Space: " + space + "\n" +
+                    "Start Time: " + startTime + "\n" +
+                    "End Time: " + endTime + "\n" +
+                    "Vehicle Type: " + vehicleType + "\n" +
+                    "Car Brand: " + carBrand + "\n" +
+                    "Duration: " + duration + " minutes\n";
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            Booking booking = (Booking) o;
+            return duration == booking.duration &&
+                    Objects.equals(space, booking.space) &&
+                    Objects.equals(startTime, booking.startTime) &&
+                    Objects.equals(endTime, booking.endTime) &&
+                    Objects.equals(vehicleType, booking.vehicleType) &&
+                    Objects.equals(carBrand, booking.carBrand);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(space, startTime, endTime, vehicleType, carBrand, duration);
+        }
     }
 }
 
-// New class to calculate booking duration by subtracting start time from end time
+// New class to calculate booking duration by subtracting start time from end time.
 class BookingDurationCalculator {
     public static long calculateDuration(String startTime, String endTime) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
@@ -609,3 +731,4 @@ class BookingDurationCalculator {
         return java.time.Duration.between(start, end).toMinutes();
     }
 }
+
