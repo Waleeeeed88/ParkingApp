@@ -8,6 +8,8 @@ import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
 import com.google.firebase.cloud.FirestoreClient;
 
+import services.FirebaseInitialization;
+
 import javax.swing.Timer;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -52,8 +54,6 @@ public class BookingPage extends JFrame {
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setSize(600, 550);
         setLocationRelativeTo(null);
-
-        initializeFirebase();
 
         // Create panels
         JPanel mainPanel = new JPanel(new BorderLayout());
@@ -251,25 +251,6 @@ public class BookingPage extends JFrame {
         loginPage.setVisible(true);
     }
 
-    private void initializeFirebase() {
-        try {
-            InputStream serviceAccount = getClass().getClassLoader().getResourceAsStream("google-services.json");
-            if (serviceAccount == null) {
-                throw new IOException("serviceAccountKey.json not found in resources");
-            }
-            FirebaseOptions options = new FirebaseOptions.Builder()
-                    .setCredentials(GoogleCredentials.fromStream(serviceAccount))
-                    .build();
-
-            if (FirebaseApp.getApps().isEmpty()) {
-                FirebaseApp.initializeApp(options);
-            }
-        } catch (IOException e) {
-            System.out.println("ERROR: invalid service account credentials. See the README.");
-            System.out.println(e.getMessage());
-            JOptionPane.showMessageDialog(this, "Firebase initialization failed: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-        }
-    }
 
     private void loadUserType() {
         new SwingWorker<String, Void>() {
@@ -280,7 +261,8 @@ public class BookingPage extends JFrame {
                 if (uid == null) {
                     return "Guest";
                 }
-                Firestore db = FirestoreClient.getFirestore();
+            	Firestore db = FirebaseInitialization.getInstance();	//instance held in database
+
                 DocumentReference docRef = db.collection("users").document(uid);
                 DocumentSnapshot docSnap = docRef.get().get();
                 if (docSnap.exists() && docSnap.contains("userType")) {
@@ -564,8 +546,7 @@ public class BookingPage extends JFrame {
      * Sets up real-time listeners on the Parking_spaces collection and its parkingSpaces subcollections.
      */
     private void loadParkingLotsAndSpacesInRealTime() {
-        Firestore db = FirestoreClient.getFirestore();
-
+    	Firestore db = FirebaseInitialization.getInstance();	//instance held in database
         db.collection("Parking_spaces")
                 .addSnapshotListener((lotSnapshots, e) -> {
                     if (e != null) {
