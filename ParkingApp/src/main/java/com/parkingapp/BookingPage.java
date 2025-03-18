@@ -7,14 +7,10 @@ import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
 import com.google.firebase.cloud.FirestoreClient;
 
+import javax.swing.Timer;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-import java.awt.BorderLayout;
-import java.awt.FlowLayout;
-import java.awt.Font;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
+import java.awt.*;
 import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.io.InputStream;
@@ -26,7 +22,6 @@ import java.util.List;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.prefs.Preferences;
-import javax.swing.Timer;
 
 public class BookingPage extends JFrame {
 
@@ -54,7 +49,7 @@ public class BookingPage extends JFrame {
     private static final String USER_TYPE_UNKNOWN = "unknown";
     private static final String TIME_FORMAT = "HH:mm";
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern(TIME_FORMAT);
-    private static final int MIN_BOOKING_ADVANCE_MINUTES = 15;
+    private static final int MIN_BOOKING_ADVANCE_MINUTES = 0;
     private static final String LICENSE_PLATE_REGEX = "^[A-Za-z0-9]{5}[A-Za-z][0-9]$";
     private String currentUserType;
     private String currentUserEmail;  // NEW
@@ -150,27 +145,60 @@ public class BookingPage extends JFrame {
         JPanel inputPanel = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = createGridBagConstraints();
 
+        // Row 0: Select Lot
         addLabelAndComponent(inputPanel, "Select Lot:", lotSelector = new JComboBox<>(), gbc, 0);
         lotSelector.addActionListener(e -> updateSpaceSelectorForSelectedLot());
 
+        // Row 1: Select Space
         addLabelAndComponent(inputPanel, "Select Space:", spaceSelector = new JComboBox<>(), gbc, 1);
         spaceSelector.addActionListener(e -> showBookingDetails());
 
+        // Row 2: Current Time
         addLabelAndComponent(inputPanel, "Current Time:", realTimeLabel = new JLabel(), gbc, 2);
 
+        // Row 3: Start Time (HH:MM)
         addLabelAndComponent(inputPanel, "Start Time (HH:MM):", startTimeField = new JTextField(5), gbc, 3);
+
+        // Row 4: End Time (HH:MM)
         addLabelAndComponent(inputPanel, "End Time (HH:MM):", endTimeField = new JTextField(5), gbc, 4);
 
-        addLabelAndComponent(inputPanel, "Vehicle Type:", vehicleTypeSelector = createVehicleTypeSelector(), gbc, 5);
-        addLabelAndComponent(inputPanel, "Car Brand:", carBrandField = new JTextField(10), gbc, 6);
+        // Row 5: Timeline selection button
+        gbc.gridx = 0;
+        gbc.gridy = 5;
+        gbc.gridwidth = 2;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 1.0;
+        JButton timelineSelectButton = new JButton("Select Time via Timeline");
+        timelineSelectButton.setFont(new Font("Arial", Font.BOLD, 14));
+        timelineSelectButton.addActionListener(e -> {
+            // Launch the timeline dialog (modal) and update the time fields upon selection
+            BookingTimelineDialog dialog = new BookingTimelineDialog(BookingPage.this);
+            dialog.setVisible(true);
+            String start = dialog.getSelectedStartTime();
+            String end = dialog.getSelectedEndTime();
+            if (start != null && end != null) {
+                startTimeField.setText(start);
+                endTimeField.setText(end);
+            }
+        });
+        inputPanel.add(timelineSelectButton, gbc);
 
-        addLabelAndComponent(inputPanel, "License Plate:", licensePlateField = new JTextField(10), gbc, 7);
+        // Row 6: Vehicle Type
+        gbc.gridwidth = 1;
+        addLabelAndComponent(inputPanel, "Vehicle Type:", vehicleTypeSelector = createVehicleTypeSelector(), gbc, 6);
 
+        // Row 7: Car Brand
+        addLabelAndComponent(inputPanel, "Car Brand:", carBrandField = new JTextField(10), gbc, 7);
+
+        // Row 8: License Plate
+        addLabelAndComponent(inputPanel, "License Plate:", licensePlateField = new JTextField(10), gbc, 8);
+
+        // Row 9: Booking Details Area (with scroll pane)
         bookingDetailsArea = new JTextArea(10, 30);
         bookingDetailsArea.setEditable(false);
         JScrollPane scrollPane = new JScrollPane(bookingDetailsArea);
         gbc.gridx = 0;
-        gbc.gridy = 8;
+        gbc.gridy = 9;
         gbc.gridwidth = 2;
         gbc.fill = GridBagConstraints.BOTH;
         gbc.weighty = 1.0;
@@ -178,6 +206,7 @@ public class BookingPage extends JFrame {
 
         return inputPanel;
     }
+
 
     private GridBagConstraints createGridBagConstraints() {
         GridBagConstraints gbc = new GridBagConstraints();
