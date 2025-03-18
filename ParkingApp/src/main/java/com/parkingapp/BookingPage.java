@@ -705,19 +705,52 @@ public class BookingPage extends JFrame {
         String carBrand = carBrandField.getText().trim();
         String licensePlate = licensePlateField.getText().trim();
 
-        // Check overlap, excluding the current booking
+        // Check for overlap
         if (isSpaceBooked(selectedLot, selectedSpace, startTime, endTime, originalBookingId)) {
             JOptionPane.showMessageDialog(this, "This space is already booked for the selected time.", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
-        long duration = BookingDurationCalculator.calculateDuration(startTime, endTime);
-        Map<String, Object> updateData = prepareBookingData(selectedLot, selectedSpace, startTime, endTime, vehicleType, carBrand, duration, licensePlate);
-        // Don't set the status here, it should remain "booked"
-        updateData.put(STATUS_FIELD, BOOKED_STATUS);
+        Booking currentBooking = realTimeBookings.get(originalBookingId);
+        long newDuration = BookingDurationCalculator.calculateDuration(startTime, endTime);
+        long additionalDuration = newDuration - currentBooking.getDuration();
 
-        updateBookingInFirestore(originalBookingId, updateData);
+        if (additionalDuration > 0) {
+            double additionalCost = PaymentRates.calculateCost(
+                    UserLogin.UserType.valueOf(currentUserType.toUpperCase()), additionalDuration
+            );
+
+            int confirmPayment = JOptionPane.showConfirmDialog(this,
+                    "Editing will cost an additional $" + additionalCost + ". Do you want to proceed?",
+                    "Confirm Additional Payment", JOptionPane.YES_NO_OPTION);
+
+            if (confirmPayment != JOptionPane.YES_OPTION) {
+                JOptionPane.showMessageDialog(this, "Edit cancelled.", "Cancelled", JOptionPane.INFORMATION_MESSAGE);
+                return;
+            }
+
+            PaymentPage paymentDialog = new PaymentPage(
+                    this,
+                    currentUserEmail,
+                    UserLogin.UserType.valueOf(currentUserType.toUpperCase()),
+                    additionalDuration,
+                    (wasPaid) -> {
+                        if (wasPaid) {
+                            Map<String, Object> updateData = prepareBookingData(selectedLot, selectedSpace, startTime, endTime, vehicleType, carBrand, newDuration, licensePlate);
+                            updateBookingInFirestore(originalBookingId, updateData);
+                        } else {
+                            JOptionPane.showMessageDialog(this, "Payment failed. Edit not applied.", "Payment Error", JOptionPane.ERROR_MESSAGE);
+                        }
+                    }
+            );
+            paymentDialog.setVisible(true);
+        } else {
+            JOptionPane.showMessageDialog(this, "No additional payment needed. Booking updated.", "No Extra Charge", JOptionPane.INFORMATION_MESSAGE);
+            Map<String, Object> updateData = prepareBookingData(selectedLot, selectedSpace, startTime, endTime, vehicleType, carBrand, newDuration, licensePlate);
+            updateBookingInFirestore(originalBookingId, updateData);
+        }
     }
+
 
     private void updateBookingInFirestore(String bookingId, Map<String, Object> updateData) {
         // Use SwingWorker for asynchronous Firestore operation
@@ -779,16 +812,55 @@ public class BookingPage extends JFrame {
             return;
         }
 
-        // Check for overlap (using the original start time)
+        // Check for overlap (excluding the current booking)
         if (isSpaceBooked(selectedLot, selectedSpace, currentBooking.getStartTime(), newEndTime, bookingIdToExtend)) {
             JOptionPane.showMessageDialog(this, "Extending the booking would overlap with another booking.", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
         long newDuration = BookingDurationCalculator.calculateDuration(currentBooking.getStartTime(), newEndTime);
-        Map<String, Object> updateMap = Map.of(END_TIME_FIELD, newEndTime, DURATION_FIELD, newDuration);
-        extendBookingInFirestore(bookingIdToExtend, updateMap);
+        long additionalDuration = newDuration - currentBooking.getDuration();
+
+        if (additionalDuration > 0) {
+            double additionalCost = PaymentRates.calculateCost(
+                    UserLogin.UserType.valueOf(currentUserType.toUpperCase()), additionalDuration
+            );
+
+            // Ask the user to pay for the additional cost
+            int confirmPayment = JOptionPane.showConfirmDialog(this,
+                    "Extending will cost an additional $" + additionalCost + ". Do you want to proceed?",
+                    "Confirm Additional Payment", JOptionPane.YES_NO_OPTION);
+
+            if (confirmPayment != JOptionPane.YES_OPTION) {
+                JOptionPane.showMessageDialog(this, "Extension cancelled.", "Cancelled", JOptionPane.INFORMATION_MESSAGE);
+                return;
+            }
+
+            PaymentPage paymentDialog = new PaymentPage(
+                    this,
+                    currentUserEmail,
+                    UserLogin.UserType.valueOf(currentUserType.toUpperCase()),
+                    additionalDuration,
+                    (wasPaid) -> {
+                        if (wasPaid) {
+                            Map<String, Object> updateMap = Map.of(
+                                    END_TIME_FIELD, newEndTime,
+                                    DURATION_FIELD, newDuration
+                            );
+                            extendBookingInFirestore(bookingIdToExtend, updateMap);
+                        } else {
+                            JOptionPane.showMessageDialog(this, "Payment failed. Extension not applied.", "Payment Error", JOptionPane.ERROR_MESSAGE);
+                        }
+                    }
+            );
+            paymentDialog.setVisible(true);
+        } else {
+            JOptionPane.showMessageDialog(this, "No additional payment needed. Booking updated.", "No Extra Charge", JOptionPane.INFORMATION_MESSAGE);
+            Map<String, Object> updateMap = Map.of(END_TIME_FIELD, newEndTime, DURATION_FIELD, newDuration);
+            extendBookingInFirestore(bookingIdToExtend, updateMap);
+        }
     }
+
 
 
     private void extendBookingInFirestore(String bookingId, Map<String, Object> updateMap) {
