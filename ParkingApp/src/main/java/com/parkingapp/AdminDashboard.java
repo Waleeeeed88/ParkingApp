@@ -3,6 +3,7 @@ package com.parkingapp;
 import javax.swing.*;
 import java.awt.*;
 import java.io.*;
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -18,9 +19,8 @@ public class AdminDashboard extends JFrame {
         this.adminPrototype = adminPrototype;
         this.isSuperManager = isSuperManager;
 
-
-        setTitle("Admin Dashboard");
-        setSize(500, 250);
+        setTitle("Super Manager Dashboard - Oversee Admin Accounts and Parking Lot Management");
+        setSize(650, 250);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
 
@@ -29,7 +29,7 @@ public class AdminDashboard extends JFrame {
         gbc.insets = new Insets(10, 10, 10, 10);
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
-        JLabel dashboardLabel = new JLabel("Admin Dashboard");
+        JLabel dashboardLabel = new JLabel("Super Manager Dashboard");
         dashboardLabel.setFont(new Font("Arial", Font.BOLD, 24));
         gbc.gridx = 0;
         gbc.gridy = 0;
@@ -63,7 +63,7 @@ public class AdminDashboard extends JFrame {
         add(panel);
 
         openParkingServicesButton.addActionListener(e -> openParkingServices());
-        createAdminButton.addActionListener(e -> createAdminAccount());
+        createAdminButton.addActionListener(e -> generateAdminAccount());
         viewAdminAccountsButton.addActionListener(e -> viewGeneratedAccounts());
         logoutButton.addActionListener(e -> logout());
 
@@ -73,50 +73,52 @@ public class AdminDashboard extends JFrame {
     private void openParkingServices() {
         dispose();
         new AdminParkingServices(isSuperManager);
-
     }
 
-    private void createAdminAccount() {
-        JTextField userIdField = new JTextField(10);
-        JPasswordField passwordField = new JPasswordField(10);
+    private void generateAdminAccount() {
+        JTextField prefixField = new JTextField(10);
 
         JPanel inputPanel = new JPanel(new GridLayout(0, 1));
-        inputPanel.add(new JLabel("User ID:"));
-        inputPanel.add(userIdField);
-        inputPanel.add(new JLabel("Password:"));
-        inputPanel.add(passwordField);
+        inputPanel.add(new JLabel("Enter username prefix (e.g., 'admin'):"));
+        inputPanel.add(prefixField);
 
         int result = JOptionPane.showConfirmDialog(this, inputPanel,
-                "Create Admin Account", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+                "Generate Admin Account", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
 
         if (result == JOptionPane.OK_OPTION) {
-            String userId = userIdField.getText();
-            String password = new String(passwordField.getPassword());
+            String prefix = prefixField.getText().trim().toLowerCase(); // Convert to lowercase
 
-            if (userId.isEmpty() || password.isEmpty()) {
-                JOptionPane.showMessageDialog(this, "User ID and password cannot be empty.", "Error", JOptionPane.ERROR_MESSAGE);
+            if (prefix.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Prefix cannot be empty.", "Error", JOptionPane.ERROR_MESSAGE);
                 return;
             }
 
-            AdminAccount newAdmin = adminPrototype.clone();
-            newAdmin.setUserId(userId);
-            newAdmin.setPassword(password);
+            // Generate username using prefix + "yups" (all lowercase)
+            String uniqueUserId = prefix + "yups";
+            String generatedPassword = generateSecurePassword(10); // Generate 16-character strong password
 
-            saveAdminAccountToCSV(userId, password);
-            JOptionPane.showMessageDialog(this, "Admin account created for User ID: " + userId);
+            AdminAccount newAdmin = adminPrototype.clone();
+            newAdmin.setUserId(uniqueUserId);
+            newAdmin.setPassword(generatedPassword);
+
+            saveAdminAccountToCSV(uniqueUserId, generatedPassword);
+            JOptionPane.showMessageDialog(this, "Admin account created!\nUsername: " + uniqueUserId + "\nPassword: " + generatedPassword);
         }
     }
 
-    private void saveAdminAccountToCSV(String userId, String password) {
-        int counter = 0;
-        try (BufferedReader reader = new BufferedReader(new FileReader(CSV_FILE))) {
-            while (reader.readLine() != null) {
-                counter++; // Count the existing lines
-            }
-        } catch (IOException ignored) {
-            // File might not exist yet, ignore
+    private String generateSecurePassword(int length) {
+        String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%&*()-_?.";
+        SecureRandom random = new SecureRandom();
+        StringBuilder password = new StringBuilder();
+
+        for (int i = 0; i < length; i++) {
+            password.append(chars.charAt(random.nextInt(chars.length())));
         }
 
+        return password.toString();
+    }
+
+    private void saveAdminAccountToCSV(String userId, String password) {
         try (FileWriter writer = new FileWriter(CSV_FILE, true)) {
             writer.append(userId).append("; ").append(password).append("\n");
         } catch (IOException e) {
@@ -144,13 +146,13 @@ public class AdminDashboard extends JFrame {
     }
 
     private void logout() {
-        dispose(); // Close current dashboard window
-        SwingUtilities.invokeLater(() -> new BaseLogin.ManagementLogin().setVisible(true)); // Open login panel again
+        dispose();
+        SwingUtilities.invokeLater(() -> new BaseLogin.ManagementLogin().setVisible(true));
     }
 
     public static void main(String[] args) {
         ParkingServices parkingServices = new ParkingServices();
-        AdminAccount prototypeAdmin = new AdminAccount("defaultAdmin", "defaultPassword");
+        AdminAccount prototypeAdmin = new AdminAccount("defaultadmin", "defaultpassword");
 
         SwingUtilities.invokeLater(() -> new AdminDashboard(parkingServices, prototypeAdmin, true).setVisible(true));
     }

@@ -6,10 +6,16 @@ import com.google.cloud.firestore.*;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
 import com.google.firebase.cloud.FirestoreClient;
+import com.google.cloud.firestore.QuerySnapshot;
+import com.google.cloud.firestore.DocumentSnapshot;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
+
 
 import javax.swing.Timer;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.ActionListener;
 import java.io.IOException;
@@ -86,7 +92,7 @@ public class BookingPage extends JFrame {
     private void initializeFrame() {
         setTitle("Parking Space Booking");
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        setSize(600, 600);
+        setSize(850, 600);
         setLocationRelativeTo(null);
     }
 
@@ -258,8 +264,191 @@ public class BookingPage extends JFrame {
         buttonPanel.add(extendButton);
         buttonPanel.add(returnButton);
 
+        JButton viewBookingsButton = new JButton("View My Bookings");
+        viewBookingsButton.setFont(new Font("Arial", Font.BOLD, 14));
+        viewBookingsButton.addActionListener(e -> openMyBookingsWindow());
+        buttonPanel.add(viewBookingsButton);
+
+
         return buttonPanel;
     }
+
+    private void openMyBookingsWindow() {
+        if (currentUserEmail == null || currentUserEmail.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "No user logged in.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        JDialog bookingsDialog = new JDialog(this, "My Bookings", true);
+        bookingsDialog.setSize(650, 450);
+        bookingsDialog.setLayout(new BorderLayout());
+        bookingsDialog.setLocationRelativeTo(this);
+
+        // Table Model - Only necessary fields, non-editable
+        DefaultTableModel tableModel = new DefaultTableModel(new Object[]{"Lot", "Space", "Start Time", "End Time", "Status"}, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false; // Make table non-editable
+            }
+        };
+        JTable bookingsTable = new JTable(tableModel);
+        bookingsTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION); // Allow single row selection
+
+        // 🔹 Fetch bookings from Firestore (Real-time updates)
+        db.collection(BOOKING_COLLECTION)
+                .whereEqualTo(USER_EMAIL_FIELD, currentUserEmail)
+                .addSnapshotListener((snapshot, error) -> {
+                    if (error != null) {
+                        JOptionPane.showMessageDialog(BookingPage.this, "Error fetching bookings: " + error.getMessage(),
+                                "Firestore Error", JOptionPane.ERROR_MESSAGE);
+                        return;
+                    }
+
+                    if (snapshot != null && !snapshot.isEmpty()) {
+                        tableModel.setRowCount(0); // Clear old data
+                        for (DocumentSnapshot doc : snapshot.getDocuments()) {
+                            String lot = doc.getString(LOT_FIELD);
+                            String space = doc.getString(SPACE_FIELD);
+                            String startTime = doc.getString(START_TIME_FIELD);
+                            String endTime = doc.getString(END_TIME_FIELD);
+                            String status = doc.getString(STATUS_FIELD);
+                            tableModel.addRow(new Object[]{lot, space, startTime, endTime, status});
+                        }
+                    }
+                });
+
+        // Table Styling
+        bookingsTable.setFont(new Font("Arial", Font.PLAIN, 14));
+        bookingsTable.setRowHeight(25);
+        JScrollPane scrollPane = new JScrollPane(bookingsTable);
+
+        // 🔹 Check-In Button
+        JButton checkInButton = new JButton("Check In");
+        checkInButton.setFont(new Font("Arial", Font.BOLD, 14));
+        checkInButton.addActionListener(e -> checkInBooking(bookingsTable, bookingsDialog)); // Pass the dialog
+
+        // 🔹 Exit Button
+        JButton exitButton = new JButton("Exit");
+        exitButton.setFont(new Font("Arial", Font.BOLD, 14));
+        exitButton.addActionListener(e -> bookingsDialog.dispose()); // Simply close the dialog
+
+        // 🔹 Panel for Buttons
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.setLayout(new FlowLayout());
+        buttonPanel.add(checkInButton);
+        buttonPanel.add(exitButton); // Replaces the No Show button
+
+        // 🔹 Add Components to the Dialog
+        bookingsDialog.add(scrollPane, BorderLayout.CENTER);
+        bookingsDialog.add(buttonPanel, BorderLayout.SOUTH);
+
+        bookingsDialog.setVisible(true);
+    }
+
+
+
+    private void checkInBooking(JTable table, JDialog bookingsDialog) {
+        int selectedRow = table.getSelectedRow();
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(this, "Please select a booking to check in.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        String lot = (String) table.getValueAt(selectedRow, 0);
+        String space = (String) table.getValueAt(selectedRow, 1);
+        String bookingId = findBookingId(lot, space);
+
+        if (bookingId == null) {
+            JOptionPane.showMessageDialog(this, "Error: Could not find booking ID.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        // Step 1: Ask for Check-In Time
+        String checkInTime = JOptionPane.showInputDialog(this, "Enter your check-in time (HH:MM):");
+        if (checkInTime == null || checkInTime.trim().isEmpty()) {
+            return; // User canceled
+        }
+
+        if (!isValidTimeFormat(checkInTime)) {
+            JOptionPane.showMessageDialog(this, "Invalid time format. Use HH:MM.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        // Step 2: Ask for License Plate
+        String enteredLicensePlate = JOptionPane.showInputDialog(this, "Enter your license plate:");
+        if (enteredLicensePlate == null || enteredLicensePlate.trim().isEmpty()) {
+            return; // User canceled
+        }
+
+        // Step 3: Fetch Booking Data and Validate License Plate
+        SwingWorker<Void, Void> worker = new SwingWorker<>() {
+            private String actualLicensePlate;
+
+            @Override
+            protected Void doInBackground() throws Exception {
+                DocumentSnapshot bookingSnapshot = db.collection(BOOKING_COLLECTION).document(bookingId).get().get();
+                if (bookingSnapshot.exists()) {
+                    actualLicensePlate = bookingSnapshot.getString(LICENSE_PLATE_FIELD);
+                }
+                return null;
+            }
+
+            @Override
+            protected void done() {
+                try {
+                    get(); // Ensure no exception occurred
+
+                    // Step 4: Validate License Plate
+                    if (actualLicensePlate == null || !actualLicensePlate.equalsIgnoreCase(enteredLicensePlate)) {
+                        JOptionPane.showMessageDialog(BookingPage.this, "License plate mismatch! Check-in denied.", "Error", JOptionPane.ERROR_MESSAGE);
+                        return;
+                    }
+
+                    // Step 5: Simulate Sensor Verification
+                    JOptionPane.showMessageDialog(BookingPage.this, "Processing your details... Please wait.", "Processing", JOptionPane.INFORMATION_MESSAGE);
+
+                    SwingWorker<Void, Void> sensorWorker = new SwingWorker<>() {
+                        @Override
+                        protected Void doInBackground() throws Exception {
+                            Thread.sleep(2000); // Simulate processing time
+                            return null;
+                        }
+
+                        @Override
+                        protected void done() {
+                            // Step 6: Update Check-In Status in Database
+                            SwingWorker<Void, Void> updateWorker = new SwingWorker<>() {
+                                @Override
+                                protected Void doInBackground() throws Exception {
+                                    db.collection(BOOKING_COLLECTION).document(bookingId)
+                                            .update(STATUS_FIELD, "Checked In").get();
+                                    return null;
+                                }
+
+                                @Override
+                                protected void done() {
+                                    try {
+                                        get(); // Ensure no exception occurred
+                                        JOptionPane.showMessageDialog(BookingPage.this, "Sensor verified your parking. Thank you for checking in!", "Success", JOptionPane.INFORMATION_MESSAGE);
+                                        bookingsDialog.dispose(); // Close the bookings window
+                                    } catch (Exception e) {
+                                        JOptionPane.showMessageDialog(BookingPage.this, "Error updating check-in status: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                                    }
+                                }
+                            };
+                            updateWorker.execute();
+                        }
+                    };
+                    sensorWorker.execute();
+                } catch (Exception e) {
+                    JOptionPane.showMessageDialog(BookingPage.this, "Error processing check-in: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        };
+        worker.execute();
+    }
+
+
 
     private void setButtonFonts(JButton... buttons) {
         Font buttonFont = new Font("Arial", Font.BOLD, 14);
