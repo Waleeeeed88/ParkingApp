@@ -113,5 +113,5 @@ public class PaymentRates {
         RateCalculationStrategy strategy = getStrategy(userType);
         return strategy.calculateCost(hoursRounded);
     }
-    
+
 }
