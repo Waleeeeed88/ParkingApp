@@ -4,6 +4,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+
 // Component Interface
 interface ParkingComponent {
     String getId();
@@ -81,6 +86,9 @@ class ParkingSpace implements ParkingComponent {
         this.enabled = true; // Initially enabled
         this.occupied = false;
         this.sensor = new Sensor(this);
+        
+        // Register the DepositHandler observer so that deposit logic is triggered when a car is detected
+        this.sensor.addObserver(new DepositHandler());
     }
 
     @Override
@@ -120,7 +128,7 @@ class ParkingSpace implements ParkingComponent {
         }
         if (!occupied) {
             occupied = true;
-            sensor.detectCar(carPlate);
+            sensor.detectCar(carPlate,bookingStartTime);       //Have to deal with declaration error
         } else {
             System.out.println("Parking Space " + id + " is already occupied.");
         }
@@ -137,25 +145,118 @@ class ParkingSpace implements ParkingComponent {
     }
 }
 
-// Sensor Class (Handles Car Detection and Booking Verification for deposit)
+//// Sensor Class (Handles Car Detection and Booking Verification for deposit)
+//class Sensor {
+//    private ParkingSpace parkingSpace;
+//    private static final Random random = new Random();
+//
+//    public Sensor(ParkingSpace parkingSpace) {
+//        this.parkingSpace = parkingSpace;
+//    }
+//
+//    // Simulating Car Detection
+//    public void detectCar(String carPlate) {
+//        System.out.println("Sensor detected car: " + carPlate + " in " + parkingSpace.getId());
+//
+//        // Simulating verification of booking
+//        boolean hasValidBooking = random.nextBoolean(); // Randomly simulating booking status
+//        if (hasValidBooking) {
+//            //processDepositReturn(carPlate);
+//        } else {
+//            System.out.println("Warning: Car " + carPlate + " does not have a valid booking.");
+//        }
+//    }
+//}
+
+
+/*
+ * EXPLANATION: In our system, the Observer pattern is used to separate the responsibilities of detecting a car and handling deposit logic. 
+ * When a car is detected, the Sensor (the subject) sends out the car’s plate number along with the booking start time to all its 
+ * registered observers. One such observer, the DepositHandler, then adds one hour to the booking start time(actual start booking time possibly impoted from bookingPage) to establish a deadline. 
+ * If the car arrives before this deadline, it means the car is on time and the deposit is refunded; if it arrives after, it’s considered 
+ * a late or no-show and the deposit is charged. This design allows the Sensor to focus solely on detection while the DepositHandler (and any future observers) 
+ * independently manage the deposit rules, making the system both modular and easier to maintain.
+ */
+
+
+interface SensorObserver {
+    /**
+     * This method is called when the sensor detects a car.
+     */
+    void onCarDetected(String carPlate, ParkingSpace parkingSpace, boolean hasValidBooking, LocalDateTime bookingStartTime);
+}
+
+// Sensor Class (Handles Car Detection and Notifies Observers)
 class Sensor {
     private ParkingSpace parkingSpace;
     private static final Random random = new Random();
+    private List<SensorObserver> observers = new ArrayList<>();
 
     public Sensor(ParkingSpace parkingSpace) {
         this.parkingSpace = parkingSpace;
     }
 
-    // Simulating Car Detection
-    public void detectCar(String carPlate) {
-        System.out.println("Sensor detected car: " + carPlate + " in " + parkingSpace.getId());
+    // Allow observers to register
+    public void addObserver(SensorObserver observer) {
+        observers.add(observer);
+    }
 
-        // Simulating verification of booking
-        boolean hasValidBooking = random.nextBoolean(); // Randomly simulating booking status
-        if (hasValidBooking) {
-            //processDepositReturn(carPlate);
-        } else {
-            System.out.println("Warning: Car " + carPlate + " does not have a valid booking.");
+    // Allow observers to deregister
+    public void removeObserver(SensorObserver observer) {
+        observers.remove(observer);
+    }
+
+    // Simulating Car Detection with Time Checking
+    
+    // bookingStartTime should be imported from bookingPage into this detectCar method
+    public void detectCar(String carPlate, LocalDateTime bookingStartTime) {
+        System.out.println("Sensor detected car: " + carPlate + " in " + parkingSpace.getId());
+        // Simulate booking verification (for demonstration, we still use a random boolean)
+        boolean hasValidBooking = random.nextBoolean();
+        // Notify all observers with the carPlate, booking status, and booking start time
+        notifyObservers(carPlate, hasValidBooking, bookingStartTime);
+    }
+
+    private void notifyObservers(String carPlate, boolean hasValidBooking, LocalDateTime bookingStartTime) {
+        for (SensorObserver observer : observers) {
+            observer.onCarDetected(carPlate, parkingSpace, hasValidBooking, bookingStartTime);
         }
     }
 }
+
+
+public class DepositHandler implements SensorObserver {
+	
+	 // bookingStartTime should be imported from bookingPage into this detectCar method
+
+    @Override
+    public void onCarDetected(String carPlate, ParkingSpace parkingSpace, boolean hasValidBooking, LocalDateTime bookingStartTime) {
+        // Calculate deadline: actual bookingStartTime + 1 hour
+        LocalDateTime deadline = bookingStartTime.plusHours(1);
+        if (hasValidBooking && LocalDateTime.now().isBefore(deadline)) {
+            System.out.println("Valid booking detected for car " + carPlate + ". Arrival is before the 1-hour deadline.");
+            processDepositReturn(carPlate);
+        } else {
+            System.out.println("No valid booking (or car arrived after 1 hour) for car " + carPlate + ".");
+            processNoShowDeposit(carPlate);
+        }
+    }
+
+    // Process deposit refund for a valid booking within 1 hour
+    private void processDepositReturn(String carPlate) {
+        // In a real system, this might interact with a payment module.
+        System.out.println("Deposit for car " + carPlate + " has been refunded.");
+    }
+
+    // Process deposit charge for a no-show (invalid booking or late arrival)
+    private void processNoShowDeposit(String carPlate) {
+        // Calculate the deposit as the cost for 1 hour using PaymentRates and a default user type (e.g., VISITOR)
+        double depositAmount = PaymentRates.calculateCost(UserLogin.UserType.VISITOR, 60);
+        System.out.println("Deposit of $" + String.format("%.2f", depositAmount) +
+                " has been charged for car " + carPlate + " due to no valid booking or late arrival.");
+    }
+}
+
+
+
+
