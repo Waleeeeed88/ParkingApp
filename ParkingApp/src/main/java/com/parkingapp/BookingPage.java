@@ -74,6 +74,10 @@ public class BookingPage extends JFrame {
     private JTextField licensePlateField;
     private JLabel realTimeLabel;
     private ActionListener bookButtonActionListener;  // Keep the original listener
+    
+    //ADDED BALANCE LABEL AS A JLABEL TO DISPLAY USER BALANCE
+    private JLabel balanceLabel;      // Newly added for showing balance
+
 
     // Data Storage
     private final Map<String, Booking> realTimeBookings = new HashMap<>();
@@ -134,18 +138,236 @@ public class BookingPage extends JFrame {
         return mainPanel;
     }
 
+//    private JPanel createHeaderPanel() {
+//        JPanel headerPanel = new JPanel(new BorderLayout());
+//        JLabel titleLabel = new JLabel("Booking Page");
+//        titleLabel.setFont(new Font("Arial", Font.BOLD, 20));
+//        headerPanel.add(titleLabel, BorderLayout.WEST);
+//
+////        userTypeLabel = new JLabel("Loading...", SwingConstants.RIGHT);
+////        userTypeLabel.setFont(new Font("Arial", Font.BOLD, 16));
+////        headerPanel.add(userTypeLabel, BorderLayout.EAST);
+////        return headerPanel;
+//        
+//    }
+    
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     private JPanel createHeaderPanel() {
         JPanel headerPanel = new JPanel(new BorderLayout());
+
+        // Left side: Title label
         JLabel titleLabel = new JLabel("Booking Page");
         titleLabel.setFont(new Font("Arial", Font.BOLD, 20));
         headerPanel.add(titleLabel, BorderLayout.WEST);
 
-        userTypeLabel = new JLabel("Loading...", SwingConstants.RIGHT);
+        // Right side: sub-panel for user type, balance, and Load Funds button
+        JPanel rightPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+
+        // userTypeLabel (retained from your original code)
+        // so loadUserType() can still set it to the user type
+        userTypeLabel = new JLabel("Loading...");
         userTypeLabel.setFont(new Font("Arial", Font.BOLD, 16));
-        headerPanel.add(userTypeLabel, BorderLayout.EAST);
+        rightPanel.add(userTypeLabel);
+
+        // The balance label
+        balanceLabel = new JLabel("BALANCE: $0.00");
+        balanceLabel.setFont(new Font("Arial", Font.BOLD, 16));
+        rightPanel.add(balanceLabel);
+
+        // "Load Funds" button
+        JButton loadFundsButton = new JButton("Load Funds");
+        loadFundsButton.setFont(new Font("Arial", Font.BOLD, 14));
+        loadFundsButton.addActionListener(e -> showLoadFundsDialog());
+        rightPanel.add(loadFundsButton);
+
+        // Add the right panel to the header
+        headerPanel.add(rightPanel, BorderLayout.EAST);
+
+        // Call loadUserBalance() so it fetches from Firestore and updates balanceLabel
+        loadUserBalance();
+
         return headerPanel;
     }
+    
+    public void loadUserBalance() {
+        SwingWorker<Double, Void> worker = new SwingWorker<>() {
+            @Override
+            protected Double doInBackground() throws Exception {
+                // Retrieve the user UID from Preferences
+                Preferences prefs = Preferences.userNodeForPackage(BookingPage.class);
+                String uid = prefs.get(USER_UID_PREF_KEY, null);
+                if (uid == null) {
+                    return 0.0; // If no user is logged in, just return 0.0
+                }
 
+                // Fetch the user's document from Firestore
+                DocumentReference docRef = db.collection(USER_COLLECTION).document(uid);
+                DocumentSnapshot docSnap = docRef.get().get();
+                if (docSnap.exists() && docSnap.contains("balance")) {
+                    return docSnap.getDouble("balance");
+                }
+                return 0.0;
+            }
+
+            @Override
+            protected void done() {
+                try {
+                    double balance = get();  // The user's current balance
+                    balanceLabel.setText("BALANCE: $" + String.format("%.2f", balance));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        };
+        worker.execute();
+    }
+    
+    private void showLoadFundsDialog() {
+        JDialog loadFundsDialog = new JDialog(this, "Load Funds", true);
+        loadFundsDialog.setSize(400, 350);
+        loadFundsDialog.setLocationRelativeTo(this);
+
+        JPanel panel = new JPanel(new GridLayout(8, 1, 10, 10));
+
+        JLabel amountLabel = new JLabel("Amount to Load ($):");
+        JTextField amountField = new JTextField();
+
+        JLabel methodLabel = new JLabel("Select Payment Method:");
+        String[] methods = {"Credit Card", "Debit Card", "Mobile Payment"};
+        JComboBox<String> methodComboBox = new JComboBox<>(methods);
+
+        JLabel cardNumberLabel = new JLabel("Card Number (16 digits):");
+        JTextField cardNumberField = new JTextField();
+
+        JLabel cvvLabel = new JLabel("CVV (3 digits):");
+        JTextField cvvField = new JTextField();
+
+        // Add all to panel
+        panel.add(amountLabel);
+        panel.add(amountField);
+        panel.add(methodLabel);
+        panel.add(methodComboBox);
+        panel.add(cardNumberLabel);
+        panel.add(cardNumberField);
+        panel.add(cvvLabel);
+        panel.add(cvvField);
+
+        JButton confirmButton = new JButton("Confirm Payment");
+        confirmButton.addActionListener(e -> {
+            // Validate amount
+            double amount;
+            try {
+                amount = Double.parseDouble(amountField.getText().trim());
+                if (amount <= 0) {
+                    JOptionPane.showMessageDialog(loadFundsDialog, "Enter a positive amount.", "Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(loadFundsDialog, "Invalid amount entered.", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            String method = (String) methodComboBox.getSelectedItem();
+            if (method.equals("Credit Card") || method.equals("Debit Card")) {
+                // Validate 16-digit card number
+                String cardNumber = cardNumberField.getText().trim().replaceAll("\\s", "");
+                if (!cardNumber.matches("\\d{16}")) {
+                    JOptionPane.showMessageDialog(loadFundsDialog, "Card number must be exactly 16 digits (with spaces every 4 digits).", "Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+                // Validate 3-digit CVV
+                String cvv = cvvField.getText().trim();
+                if (!cvv.matches("\\d{3}")) {
+                    JOptionPane.showMessageDialog(loadFundsDialog, "CVV must be exactly 3 digits.", "Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+            }
+            // For Mobile Payment, you could add a different validation or skip.
+
+            // Simulate payment success
+            JOptionPane.showMessageDialog(loadFundsDialog, "Processing payment...", "Processing", JOptionPane.INFORMATION_MESSAGE);
+            // In real code, integrate with payment gateway here.
+
+            // If successful, update user balance
+            updateUserBalanceAfterLoad(amount);
+            loadFundsDialog.dispose();
+        });
+
+        // Insert confirm button at bottom
+        panel.add(confirmButton);
+
+        loadFundsDialog.add(panel);
+        loadFundsDialog.setVisible(true);
+    }
+    
+    private void updateUserBalanceAfterLoad(double amountToAdd) {
+        // We run this in a SwingWorker so the UI won't freeze while Firestore is called
+        SwingWorker<Double, Void> worker = new SwingWorker<>() {
+            @Override
+            protected Double doInBackground() throws Exception {
+                // 1. Get the user's UID from Preferences
+                Preferences prefs = Preferences.userNodeForPackage(BookingPage.class);
+                String uid = prefs.get(USER_UID_PREF_KEY, null);
+                if (uid == null) {
+                    return null; // No user logged in
+                }
+
+                // 2. Fetch the user document
+                DocumentReference userRef = db.collection("users").document(uid);
+                // This returns an ApiFuture<DocumentSnapshot>
+                ApiFuture<DocumentSnapshot> future = userRef.get();
+                DocumentSnapshot docSnap = future.get(); // blocking call to get the snapshot
+
+                // 3. Read the current balance (default to 0 if not found)
+                double currentBalance = 0.0;
+                if (docSnap.exists() && docSnap.contains("balance")) {
+                    currentBalance = docSnap.getDouble("balance");
+                }
+
+                // 4. Compute new balance
+                double newBalance = currentBalance + amountToAdd;
+
+                // 5. Write the new balance back to Firestore
+                ApiFuture<WriteResult> writeFuture = userRef.set(
+                    Map.of("balance", newBalance),
+                    SetOptions.merge()
+                );
+                writeFuture.get(); // wait for the write to complete
+
+                // 6. Return the new balance so we can update the label on the event thread
+                return newBalance;
+            }
+
+            @Override
+            protected void done() {
+                try {
+                    // The newBalance returned by doInBackground()
+                    Double newBalance = get();
+                    if (newBalance != null) {
+                        balanceLabel.setText("BALANCE: $" + String.format("%.2f", newBalance));
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    JOptionPane.showMessageDialog(
+                            BookingPage.this,
+                            "Error updating balance: " + e.getMessage(),
+                            "Error",
+                            JOptionPane.ERROR_MESSAGE
+                    );
+                }
+            }
+        };
+
+        // 7. Execute the SwingWorker to run the Firestore call in background
+        worker.execute();
+    }
+
+
+    
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    
+    
     //region Create UI
     private JPanel createInputPanel() {
         JPanel inputPanel = new JPanel(new GridBagLayout());

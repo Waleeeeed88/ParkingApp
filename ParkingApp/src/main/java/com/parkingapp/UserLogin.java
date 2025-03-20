@@ -356,6 +356,8 @@ public class UserLogin extends JFrame { // Extending JFrame
             Map<String, Object> data = new HashMap<>();
             data.put("email", email);
             data.put("userType", userType.name()); // Storing as String
+            //ADDED USER BALANCE TO STORE IN FIRESTORE
+            data.put("balance", 0.0); // Default balance now set to 0.0
 
             WriteResult result = docRef.set(data, SetOptions.merge()).get(); // Using .get() for Future
             System.out.println("User info stored for UID " + uid + " at " + result.getUpdateTime());
