@@ -352,11 +352,12 @@ public class AdminParkingServices {
         });
     }
     private void updateLotStatus(String lotId) {
-        Firestore db = FirebaseInitialization.getInstance();
-        ApiFuture<DocumentSnapshot> future = db.collection("Parking_spaces").document(lotId).get();
-        new Thread(() -> {
-            try {
-                DocumentSnapshot doc = future.get();
+        SwingWorker<String, Void> worker = new SwingWorker<>() {
+            @Override
+            protected String doInBackground() throws Exception {
+                Firestore db = FirebaseInitialization.getInstance();
+                // This blocking call is off the EDT
+                DocumentSnapshot doc = db.collection("Parking_spaces").document(lotId).get().get();
                 boolean enabled = false;
                 if (doc.exists()) {
                     Object enabledObj = doc.get("enabled");
@@ -368,26 +369,36 @@ public class AdminParkingServices {
                         }
                     }
                 }
-                String status = enabled ? "Enabled" : "Disabled";
-                SwingUtilities.invokeLater(() -> lotStatusLabel.setText(status));
-            } catch (Exception ex) {
-                ex.printStackTrace();
-                SwingUtilities.invokeLater(() -> lotStatusLabel.setText("Error"));
+                return enabled ? "Enabled" : "Disabled";
             }
-        }).start();
+
+            @Override
+            protected void done() {
+                try {
+                    String status = get();
+                    lotStatusLabel.setText(status);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    lotStatusLabel.setText("Error");
+                }
+            }
+        };
+        worker.execute();
     }
+
 
     // --- Method to update the ParkingSpace status by reading its Firestore document ---
     private void updateSpaceStatus(String lotId, String spaceId) {
-        Firestore db = FirebaseInitialization.getInstance();
-        ApiFuture<DocumentSnapshot> future = db.collection("Parking_spaces")
-                .document(lotId)
-                .collection("parkingSpaces")
-                .document(spaceId)
-                .get();
-        new Thread(() -> {
-            try {
-                DocumentSnapshot doc = future.get();
+        SwingWorker<String, Void> worker = new SwingWorker<>() {
+            @Override
+            protected String doInBackground() throws Exception {
+                Firestore db = FirebaseInitialization.getInstance();
+                // Offload the blocking call
+                DocumentSnapshot doc = db.collection("Parking_spaces")
+                                         .document(lotId)
+                                         .collection("parkingSpaces")
+                                         .document(spaceId)
+                                         .get().get();
                 boolean enabled = false;
                 if (doc.exists()) {
                     Object enabledObj = doc.get("enabled");
@@ -399,14 +410,23 @@ public class AdminParkingServices {
                         }
                     }
                 }
-                String status = enabled ? "Enabled" : "Disabled";
-                SwingUtilities.invokeLater(() -> spaceStatusLabel.setText(status));
-            } catch (Exception ex) {
-                ex.printStackTrace();
-                SwingUtilities.invokeLater(() -> spaceStatusLabel.setText("Error"));
+                return enabled ? "Enabled" : "Disabled";
             }
-        }).start();
+
+            @Override
+            protected void done() {
+                try {
+                    String status = get();
+                    spaceStatusLabel.setText(status);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    spaceStatusLabel.setText("Error");
+                }
+            }
+        };
+        worker.execute();
     }
+
 
 
     public static void main(String[] args) {

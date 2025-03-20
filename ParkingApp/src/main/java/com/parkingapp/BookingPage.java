@@ -530,7 +530,9 @@ public class BookingPage extends JFrame {
         SwingWorker<List<QueryDocumentSnapshot>, Void> worker = new SwingWorker<>() {
             @Override
             protected List<QueryDocumentSnapshot> doInBackground() throws Exception {
-                ApiFuture<QuerySnapshot> future = db.collection(PARKING_SPACES_COLLECTION).get();
+            	ApiFuture<QuerySnapshot> future = db.collection(PARKING_SPACES_COLLECTION)
+            		    .whereEqualTo("enabled", true)
+            		    .get();
                 QuerySnapshot snapshot = future.get(); // Get the future and get the result (blocking)
                 return snapshot.getDocuments();
             }
@@ -604,6 +606,7 @@ public class BookingPage extends JFrame {
                 ApiFuture<QuerySnapshot> future = db.collection(PARKING_SPACES_COLLECTION)
                         .document(selectedLot)
                         .collection(PARKING_SPACES_SUBCOLLECTION)
+                        .whereEqualTo("enabled", true)
                         .get();
 
                 QuerySnapshot snapshot = future.get();  // Block here
