@@ -1,5 +1,10 @@
 package com.parkingapp;
 
+import com.google.cloud.firestore.Firestore;
+import com.google.cloud.firestore.QueryDocumentSnapshot;
+import com.google.cloud.firestore.QuerySnapshot;
+import com.google.firebase.cloud.FirestoreClient;
+
 import javax.swing.*;
 import java.awt.*;
 import java.io.BufferedReader;
@@ -8,6 +13,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 public abstract class BaseLogin extends JFrame {
     protected JTextField userIdField;
@@ -157,7 +163,7 @@ public abstract class BaseLogin extends JFrame {
                 if (SUPER_MANAGER_ID.equals(userId) && SUPER_MANAGER_PASSWORD.equals(password)) {
                     JOptionPane.showMessageDialog(this, "Super Manager Login Successful!");
                     dispose();
-                    new AdminDashboard(new ParkingServices(), new AdminAccount("defaultAdmin", "defaultPassword"), true).setVisible(true);
+                    new AdminDashboard(new ParkingServices(), new AdminDashboard.AdminAccount("defaultAdmin", "defaultPassword"), true).setVisible(true);
                 } else {
                     JOptionPane.showMessageDialog(this, "Invalid Credentials", "Error", JOptionPane.ERROR_MESSAGE);
                 }
@@ -165,8 +171,6 @@ public abstract class BaseLogin extends JFrame {
         }
 
         public static class AdminLogin extends BaseLogin {
-            private static final String CSV_FILE = "admin_accounts.csv";
-
             public AdminLogin() {
                 super("Admin Login");
                 loginButton.addActionListener(e -> authenticate());
@@ -174,8 +178,13 @@ public abstract class BaseLogin extends JFrame {
 
             @Override
             protected void authenticate() {
-                String userId = userIdField.getText();
-                String password = new String(passwordField.getPassword());
+                String userId = userIdField.getText().trim();
+                String password = new String(passwordField.getPassword()).trim();
+
+                if (userId.isEmpty() || password.isEmpty()) {
+                    JOptionPane.showMessageDialog(this, "Fields cannot be empty.", "Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
 
                 if (verifyAdminCredentials(userId, password)) {
                     JOptionPane.showMessageDialog(this, "Admin Login Successful!");
@@ -187,24 +196,32 @@ public abstract class BaseLogin extends JFrame {
             }
 
             private boolean verifyAdminCredentials(String userId, String password) {
-                try (BufferedReader reader = new BufferedReader(new FileReader(CSV_FILE))) {
-                    String line;
-                    while ((line = reader.readLine()) != null) {
-                        if (line.equals(userId + "; " + password)) {
-                            return true;
+                Firestore db = FirestoreClient.getFirestore();
+
+                try {
+                    QuerySnapshot snapshot = db.collection("admin_accounts").get().get();
+                    for (QueryDocumentSnapshot document : snapshot) {
+                        String storedUser = document.getString("admin_user");
+                        String storedPassword = document.getString("admin_password");
+
+                        if (storedUser != null && storedPassword != null) {
+                            if (storedUser.equals(userId) && storedPassword.equals(password)) {
+                                return true;
+                            }
                         }
                     }
-                } catch (IOException e) {
-                    return false;
+                } catch (InterruptedException | ExecutionException e) {
+                    JOptionPane.showMessageDialog(this, "Error connecting to database.", "Error", JOptionPane.ERROR_MESSAGE);
                 }
                 return false;
             }
         }
 
+
         public static class LoginFactory {
             public static JFrame createLogin(String userType) {
                 if (userType.equalsIgnoreCase("Admin")) {
-                    return new AdminLogin();
+                    return new BaseLogin.ManagementLogin.AdminLogin();
                 } else if (userType.equalsIgnoreCase("SuperManager")) {
                     return new SuperManagerLogin();
                 }

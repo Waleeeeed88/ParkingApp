@@ -241,7 +241,7 @@ public class AdminParkingServices {
             frame.dispose(); // Close current window
 
             if (isSuperManager) {
-                new AdminDashboard(new ParkingServices(), new AdminAccount("defaultAdmin", "defaultPassword"), isSuperManager).setVisible(true);
+                new AdminDashboard(new ParkingServices(), new AdminDashboard.AdminAccount("defaultAdmin", "defaultPassword"), isSuperManager).setVisible(true);
 
             } else {
 
