@@ -59,11 +59,11 @@ Documentation and Demo
 
 Contributors
 
-    Mohammad Waliduddin
-    Nathan Binu
-    Harmandeep Arneja
+    Mohammad Waliduddin @Waleeeeed88
+    Nathan Binu @NathanBinu
+    Harmandeep Arneja @HarmandeepArneja
     Bhavneet Kaur
-    Syed Rizvi
+    Syed Ali Raza Rizvi @aliriz71
     
 
 License
