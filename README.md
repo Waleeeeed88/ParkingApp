@@ -60,7 +60,7 @@ Documentation and Demo
 Contributors
 
     Mohammad Waliduddin @Waleeeeed88
-    Nathan Binu @NathanBinu
+    Nathan Binu Edappilly @NathanBinu
     Harmandeep Arneja @HarmandeepArneja
     Bhavneet Kaur
     Syed Ali Raza Rizvi @aliriz71
