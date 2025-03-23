@@ -1,0 +1,281 @@
+// This is the frontend code for the userlogin page
+public class UserLogin extends JFrame {
+//API keys
+public enum UserType {
+        STUDENT, FACULTY, NON_FACULTY, VISITOR
+    }
+    public static void main(String[] args) {
+//
+}
+// then initializing fire base
+public UserLogin() {
+        initializeFirebase();
+    }
+
+    private void initializeFirebase() {
+// initalizing the fire base here
+}
+
+// This is darkmode enhance the user experince
+// this is the UI files for the user login
+// To initalize darkmode Add this method to toggle dark mode
+    private void toggleDarkMode() {
+        isDarkMode = !isDarkMode;
+
+        Color backgroundColor = isDarkMode ? Color.DARK_GRAY : Color.WHITE;
+        Color textColor = isDarkMode ? Color.WHITE : Color.BLACK;
+        
+        mainPanel.setBackground(backgroundColor);
+        frame.getContentPane().setBackground(backgroundColor);
+
+        for (Component component : mainPanel.getComponents()) {
+            if (component instanceof JPanel) {
+                component.setBackground(backgroundColor);
+                for (Component innerComponent : ((JPanel) component).getComponents()) {
+                    if (innerComponent instanceof JLabel) {
+                        innerComponent.setForeground(textColor);
+                    } else if (innerComponent instanceof JTextField || innerComponent instanceof JPasswordField) {
+                        innerComponent.setBackground(isDarkMode ? Color.GRAY : Color.WHITE);
+                        innerComponent.setForeground(textColor);
+                    } else if (innerComponent instanceof JButton) {
+                        JButton button = (JButton) innerComponent;
+                        // Ensure buttons **always** remain blue
+                        button.setBackground(new Color(30, 144, 255)); // Dodger Blue
+                        button.setForeground(Color.WHITE);
+                    }
+                }
+            }
+        }
+    }
+
+//----
+   
+    void createAndShowGUI() {
+        frame = new JFrame("YorkU Parking Booking System"); // Initialize the frame
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setSize(600, 450);
+        setLocationRelativeTo(null); //changes
+        
+        cardLayout = new CardLayout();
+        mainPanel = new JPanel(cardLayout);
+        mainPanel.setBackground(Color.BLACK); 
+        mainPanel.add(createLoginPanel(), "login");
+        mainPanel.add(createRegisterPanel(), "register");
+       
+
+      
+        frame.add(mainPanel, BorderLayout.CENTER); //changes
+     // Dark Mode Toggle Button
+        JButton darkModeButton = new JButton("🌙");
+        darkModeButton.addActionListener(e -> toggleDarkMode());
+        JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        topPanel.add(darkModeButton);
+        frame.add(topPanel, BorderLayout.NORTH);
+        frame.setVisible(true);
+        //----
+        frame.setLocationRelativeTo(null);
+        frame.setVisible(true);
+        frame.add(mainPanel);
+        frame.setLocationRelativeTo(null); // Center the frame
+        frame.setVisible(true); // Make the frame visible
+    }
+    
+
+
+      
+    
+ 
+    
+
+    private JPanel createLoginPanel() {
+        JPanel panel = new JPanel(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(10, 10, 10, 10);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+
+        JLabel loginLabel = new JLabel("Login");
+        loginLabel.setFont(new Font("Arial", Font.BOLD, 28));
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+       
+        gbc.gridwidth = 2;
+        gbc.anchor = GridBagConstraints.CENTER;  //changes in the label position
+        panel.add(loginLabel, gbc);
+
+        JLabel emailLabel = new JLabel("Email:");
+       emailLabel.setFont(new Font("Arial",Font.BOLD,15)); //chnages I made
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        gbc.gridwidth = 1;
+        panel.add(emailLabel, gbc);
+
+        emailField = new JTextField();
+        emailField.setPreferredSize(new Dimension(300, 35));
+        gbc.gridx = 1;
+        gbc.gridy = 1;
+        panel.add(emailField, gbc);
+
+        JLabel passwordLabel = new JLabel("Password:");
+        passwordLabel.setFont(new Font("Arial",Font.BOLD,15)); //chnages I made
+        gbc.gridx = 0;
+       gbc.gridy = 2;
+      //  gbc.gridy = 3;
+       gbc.anchor = GridBagConstraints.WEST;
+        panel.add(passwordLabel, gbc);
+
+        passwordField = new JPasswordField();
+        passwordField.setPreferredSize(new Dimension(300, 35));
+        gbc.gridx = 1;
+        gbc.gridy = 2;
+      //  gbc.gridy = 4;
+        gbc.anchor = GridBagConstraints.WEST;
+        panel.add(passwordField, gbc);
+       
+
+     // Create Buttons with a Blue Background and White Text
+        JButton loginButton = new JButton("Login");
+        loginButton.setBackground(new Color(30, 144, 255)); // Dodger Blue
+        loginButton.setForeground(Color.WHITE);
+        loginButton.setFont(new Font("Arial", Font.BOLD, 14));
+        loginButton.setOpaque(true);
+        loginButton.setBorderPainted(false);
+
+        JButton createAccountButton = new JButton("Create Account");
+        createAccountButton.setBackground(new Color(30, 144, 255));
+        createAccountButton.setForeground(Color.WHITE);
+        createAccountButton.setFont(new Font("Arial", Font.BOLD, 14));
+        createAccountButton.setOpaque(true);
+        createAccountButton.setBorderPainted(false);
+
+        JButton adminLoginButton = new JButton("Admin Login");
+        adminLoginButton.setBackground(new Color(30, 144, 255));
+        adminLoginButton.setForeground(Color.WHITE);
+        adminLoginButton.setFont(new Font("Arial", Font.BOLD, 14));
+        adminLoginButton.setOpaque(true);
+        adminLoginButton.setBorderPainted(false);
+
+        // Add Buttons to Layout
+        gbc.gridx = 0;
+        gbc.gridy = 3;
+        gbc.gridwidth = 2;
+        gbc.anchor = GridBagConstraints.CENTER; 
+        panel.add(loginButton, gbc);
+
+        gbc.gridy = 4;
+        panel.add(createAccountButton, gbc);
+
+        gbc.gridy = 5;
+        panel.add(adminLoginButton, gbc);
+
+        // Add Action Listeners
+        loginButton.addActionListener(e -> performLogin());
+        createAccountButton.addActionListener(e -> cardLayout.show(mainPanel, "register"));
+        adminLoginButton.addActionListener(e -> new AdminLogin().setVisible(true));
+        panel.setAlignmentX(Component.CENTER_ALIGNMENT);// changes to login in middle
+        return panel;
+    }
+
+    private JPanel createRegisterPanel() {
+        JPanel panel = new JPanel(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(10, 10, 10, 10);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+
+        JLabel registerLabel = new JLabel("Register");
+        registerLabel.setFont(new Font("Arial", Font.BOLD, 28));
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.gridwidth = 2;
+        panel.add(registerLabel, gbc); 
+        
+
+        JLabel regEmailLabel = new JLabel("Email:");
+        regEmailLabel.setFont(new Font("Arial", Font.BOLD, 15));
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        gbc.gridwidth = 1;
+        panel.add(regEmailLabel, gbc);
+
+        regEmailField = new JTextField();
+        regEmailField.setPreferredSize(new Dimension(300, 35));
+        gbc.gridx = 1;
+        gbc.gridy = 1;
+        panel.add(regEmailField, gbc);
+
+        JLabel regPasswordLabel = new JLabel("Password:");
+        regPasswordLabel.setFont(new Font("Arial", Font.BOLD, 15));
+        gbc.gridx = 0;
+        gbc.gridy = 2;
+        panel.add(regPasswordLabel, gbc);
+
+        regPasswordField = new JPasswordField();
+        regPasswordField.setPreferredSize(new Dimension(300, 35));
+        gbc.gridx = 1;
+        gbc.gridy = 2;
+        panel.add(regPasswordField, gbc);
+
+        // --- User Type Dropdown ---
+        JLabel userTypeLabel = new JLabel("User Type:");
+        userTypeLabel.setFont(new Font("Arial", Font.BOLD, 15));
+        gbc.gridx = 0;
+        gbc.gridy = 3;
+        panel.add(userTypeLabel, gbc);
+
+        userTypeComboBox = new JComboBox<>(UserType.values());
+        
+        userTypeComboBox.setPreferredSize(new Dimension(300, 35));
+        gbc.gridx = 1;
+        gbc.gridy = 3;
+        panel.add(userTypeComboBox, gbc);
+        // ------------------------------
+     // Create Buttons with a Blue Background and White Text
+        JButton registerButton = new JButton("Register");
+        registerButton.setBackground(new Color(30, 144, 255)); // Dodger Blue
+        registerButton.setForeground(Color.WHITE);
+        registerButton.setFont(new Font("Arial", Font.BOLD, 14));
+        registerButton.setOpaque(true);
+        registerButton.setBorderPainted(false);
+
+        JButton backToLoginButton = new JButton("Back to Login");
+        backToLoginButton.setBackground(new Color(30, 144, 255)); // Dodger Blue
+        backToLoginButton.setForeground(Color.WHITE);
+        backToLoginButton.setFont(new Font("Arial", Font.BOLD, 14));
+        backToLoginButton.setOpaque(true);
+        backToLoginButton.setBorderPainted(false);
+
+        // Add Buttons to Layout
+        gbc.gridx = 0;
+        gbc.gridy = 4;
+        gbc.gridwidth = 2;
+        panel.add(registerButton, gbc);
+
+        gbc.gridy = 5;
+        panel.add(backToLoginButton, gbc);
+
+        // Add Action Listeners
+        registerButton.addActionListener(e -> performRegistration());
+        backToLoginButton.addActionListener(e -> cardLayout.show(mainPanel, "login"));
+
+
+        registerButton.addActionListener(e -> performRegistration());
+        backToLoginButton.addActionListener(e -> cardLayout.show(mainPanel, "login"));
+
+        return panel;
+    }
+
+//---------
+The frontend(UI) is done then the frontend will be integrated witht he backend
+private boolean isValidEmail(String email) {
+// }
+private void performLogin() {
+// }
+    private void performRegistration() {
+// }
+private void storeUserInfoInFirestore(String uid, String email, UserType userType) {
+// }
+private String signIn(String email, String password) throws IOException {
+// }
+private String signUp(String email, String password) throws IOException {
+// }
+private String getResponse(HttpURLConnection conn) throws IOException {
+// }
