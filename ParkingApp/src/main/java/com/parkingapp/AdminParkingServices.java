@@ -1,18 +1,31 @@
 package com.parkingapp;
 
-import javax.swing.*;
-
-import com.google.api.core.ApiFuture;
-import com.google.cloud.firestore.DocumentSnapshot;
-import com.google.cloud.firestore.Firestore;
-
-import services.FirebaseInitialization;
-
-import java.awt.*;
+import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.List;
+
+import javax.swing.BorderFactory;
+import javax.swing.DefaultComboBoxModel;
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
+import javax.swing.SwingWorker;
+
+import com.google.cloud.firestore.DocumentSnapshot;
+import com.google.cloud.firestore.Firestore;
+import com.parkingapp.parkingObjects.ParkingLot;
+import com.parkingapp.parkingObjects.ParkingComponent;
+import com.parkingapp.parkingObjects.ParkingSpace;
+import com.parkingapp.parkingObjects.ParkingServices;
+
+import services.FirebaseInitialization;
 
 public class AdminParkingServices {
     private ParkingServices parkingServices; // Instance of ParkingServices
@@ -241,7 +254,7 @@ public class AdminParkingServices {
             frame.dispose(); // Close current window
 
             if (isSuperManager) {
-                new AdminDashboard(new ParkingServices(), new AdminDashboard.AdminAccount("defaultAdmin", "defaultPassword"), isSuperManager).setVisible(true);
+                new SuperAdminDashboard(new ParkingServices(), new SuperAdminDashboard.AdminAccount("defaultAdmin", "defaultPassword"), isSuperManager).setVisible(true);
 
             } else {
 

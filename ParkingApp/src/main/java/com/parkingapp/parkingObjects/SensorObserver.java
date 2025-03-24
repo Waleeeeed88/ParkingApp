@@ -1,151 +1,26 @@
-package com.parkingapp;
-
-import com.google.cloud.firestore.DocumentSnapshot;
-import com.google.cloud.firestore.Firestore;
-import com.google.cloud.firestore.QuerySnapshot;
-import com.google.firebase.cloud.FirestoreClient;
-
-import services.FirebaseInitialization;
-
-import javax.swing.*;
-import java.awt.*;
+package com.parkingapp.parkingObjects;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ExecutionException;
 
-// Component Interface
-interface ParkingComponent {
-    String getId();
-    void enable();
-    void disable();
-    boolean isEnabled();
-}
+import javax.swing.JOptionPane;
+import javax.swing.SwingWorker;
 
-// Composite Class (ParkingLot)
-class ParkingLot implements ParkingComponent {
-    private String id;
-    private List<ParkingComponent> parkingSpaces;
-    private boolean enabled;
+import com.google.cloud.firestore.DocumentSnapshot;
+import com.google.cloud.firestore.Firestore;
+import com.google.cloud.firestore.QuerySnapshot;
+import com.parkingapp.PaymentRates;
+import com.parkingapp.UserLogin;
 
-    public ParkingLot(String id) {
-        this.id = id;
-        this.parkingSpaces = new ArrayList<>();
-        this.enabled = true;
-        initializeParkingSpaces();
-    }
+import services.FirebaseInitialization;
 
-    private void initializeParkingSpaces() {
-        for (int i = 1; i <= 100; i++) {
-            String paddedNum = String.format("%03d", i);
-            parkingSpaces.add(new ParkingSpace(this.id + paddedNum, this.id));
-        }
-    }
-
-    public List<ParkingComponent> getParkingSpaces() {
-        return parkingSpaces;
-    }
-
-    @Override
-    public String getId() {
-        return id;
-    }
-
-    @Override
-    public void enable() {
-        this.enabled = true;
-        for (ParkingComponent space : parkingSpaces) {
-            space.enable();
-        }
-    }
-
-    @Override
-    public void disable() {
-        this.enabled = false;
-        for (ParkingComponent space : parkingSpaces) {
-            space.disable();
-        }
-    }
-
-    @Override
-    public boolean isEnabled() {
-        return enabled;
-    }
-}
-
-// Leaf Class (ParkingSpace)
-class ParkingSpace implements ParkingComponent {
-    private String id;
-    private String parentId;
-    private boolean enabled;
-    private boolean occupied;
-    private Sensor sensor;
-
-    public ParkingSpace(String id, String parentId) {
-        this.parentId = parentId;
-        this.id = id;
-        this.enabled = true;
-        this.occupied = false;
-        this.sensor = new Sensor(this);
-        this.sensor.addObserver(new DepositHandler());
-    }
-
-    @Override
-    public String getId() {
-        return id;
-    }
-
-    public String getParentId() {
-        return parentId;
-    }
-
-    @Override
-    public void enable() {
-        this.enabled = true;
-    }
-
-    @Override
-    public void disable() {
-        this.enabled = false;
-    }
-
-    @Override
-    public boolean isEnabled() {
-        return enabled;
-    }
-
-    public boolean isOccupied() {
-        return occupied;
-    }
-
-    public void carEnters(String carPlate, LocalDateTime bookingStartTime) {
-        if (!enabled) {
-            JOptionPane.showMessageDialog(null, "Parking Space " + id + " is not available.", "Error", JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-        if (!occupied) {
-            occupied = true;
-            sensor.detectCar(carPlate, bookingStartTime);
-        } else {
-            JOptionPane.showMessageDialog(null, "Parking Space " + id + " is already occupied.", "Error", JOptionPane.ERROR_MESSAGE);
-        }
-    }
-
-    public void carLeaves() {
-        if (occupied) {
-            occupied = false;
-            JOptionPane.showMessageDialog(null, "Parking Space " + id + " is now available.", "Info", JOptionPane.INFORMATION_MESSAGE);
-        } else {
-            JOptionPane.showMessageDialog(null, "Parking Space " + id + " was already vacant.", "Info", JOptionPane.INFORMATION_MESSAGE);
-        }
-    }
-}
-
-// Observer Pattern
+//Observer Pattern
 interface SensorObserver {
-    void onCarDetected(String carPlate, ParkingSpace parkingSpace, boolean hasValidBooking, LocalDateTime bookingStartTime);
+ void onCarDetected(String carPlate, ParkingSpace parkingSpace, boolean hasValidBooking, LocalDateTime bookingStartTime);
 }
+
 
 class Sensor {
     private ParkingSpace parkingSpace;

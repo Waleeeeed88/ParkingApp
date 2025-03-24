@@ -1,4 +1,4 @@
-package com.parkingapp;
+package com.parkingapp.parkingObjects;
 import services.FirebaseInitialization;
 
 import java.io.IOException;

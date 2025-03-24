@@ -4,6 +4,7 @@ import com.google.cloud.firestore.Firestore;
 import com.google.cloud.firestore.QueryDocumentSnapshot;
 import com.google.cloud.firestore.QuerySnapshot;
 import com.google.firebase.cloud.FirestoreClient;
+import com.parkingapp.parkingObjects.ParkingServices;
 
 import services.FirebaseInitialization;
 
@@ -165,7 +166,7 @@ public abstract class BaseLogin extends JFrame {
                 if (SUPER_MANAGER_ID.equals(userId) && SUPER_MANAGER_PASSWORD.equals(password)) {
                     JOptionPane.showMessageDialog(this, "Super Manager Login Successful!");
                     dispose();
-                    new AdminDashboard(new ParkingServices(), new AdminDashboard.AdminAccount("defaultAdmin", "defaultPassword"), true).setVisible(true);
+                    new SuperAdminDashboard(new ParkingServices(), new SuperAdminDashboard.AdminAccount("defaultAdmin", "defaultPassword"), true).setVisible(true);
                 } else {
                     JOptionPane.showMessageDialog(this, "Invalid Credentials", "Error", JOptionPane.ERROR_MESSAGE);
                 }

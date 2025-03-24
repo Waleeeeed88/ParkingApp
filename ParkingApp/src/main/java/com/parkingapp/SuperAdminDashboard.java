@@ -2,6 +2,8 @@ package com.parkingapp;
 
 import com.google.api.core.ApiFuture;
 import com.google.cloud.firestore.*;
+import com.parkingapp.parkingObjects.ParkingServices;
+
 import services.FirebaseInitialization;
 
 import javax.swing.*;
@@ -11,14 +13,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
-public class AdminDashboard extends JFrame {
+public class SuperAdminDashboard extends JFrame {
     private boolean isSuperManager;
     private JButton openParkingServicesButton, logoutButton, createAdminButton, viewAdminAccountsButton;
     private ParkingServices parkingServices;
     private AdminAccountPrototype adminPrototype;
     private static final String COLLECTION_NAME = "admin_accounts";
 
-    public AdminDashboard(ParkingServices parkingServices, AdminAccountPrototype adminPrototype, boolean isSuperManager) {
+    public SuperAdminDashboard(ParkingServices parkingServices, AdminAccountPrototype adminPrototype, boolean isSuperManager) {
         this.parkingServices = parkingServices;
         this.adminPrototype = adminPrototype;
         this.isSuperManager = isSuperManager;
