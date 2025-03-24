@@ -2,7 +2,7 @@ package com.parkingapp;
 
 import com.google.api.core.ApiFuture;
 import com.google.cloud.firestore.*;
-import com.google.firebase.cloud.FirestoreClient;
+import services.FirebaseInitialization;
 
 import javax.swing.*;
 import java.awt.*;
@@ -120,7 +120,8 @@ public class AdminDashboard extends JFrame {
     }
 
     private void saveAdminAccountToFirebase(AdminAccount adminAccount) {
-        Firestore db = FirestoreClient.getFirestore();
+        Firestore db = FirebaseInitialization.getInstance();	//instance held in database
+
         DocumentReference docRef = db.collection(COLLECTION_NAME).document(adminAccount.getUserId());
 
         // Create data map for Firestore
@@ -139,7 +140,8 @@ public class AdminDashboard extends JFrame {
     }
 
     private void viewGeneratedAccounts() {
-        Firestore db = FirestoreClient.getFirestore();
+        Firestore db = FirebaseInitialization.getInstance();	//instance held in database
+
         List<String> accounts = new ArrayList<>();
         try {
             ApiFuture<QuerySnapshot> future = db.collection(COLLECTION_NAME).get();

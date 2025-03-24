@@ -5,6 +5,8 @@ import com.google.cloud.firestore.Firestore;
 import com.google.cloud.firestore.QuerySnapshot;
 import com.google.firebase.cloud.FirestoreClient;
 
+import services.FirebaseInitialization;
+
 import javax.swing.*;
 import java.awt.*;
 import java.time.LocalDateTime;
@@ -181,7 +183,7 @@ class DepositHandler implements SensorObserver {
     private Firestore db;
 
     public DepositHandler() {
-        this.db = FirestoreClient.getFirestore(); // Initialize Firestore
+    	this.db = FirebaseInitialization.getInstance();	//instance held in database
     }
 
     @Override
@@ -248,4 +250,3 @@ class DepositHandler implements SensorObserver {
         worker.execute();
     }
 }
-

@@ -5,9 +5,8 @@ import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.firestore.*;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
-import com.google.firebase.cloud.FirestoreClient;
-import com.google.cloud.firestore.QuerySnapshot;
-import com.google.cloud.firestore.DocumentSnapshot;
+import services.FirebaseInitialization;
+
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
@@ -113,7 +112,8 @@ public class BookingPage extends JFrame {
             if (FirebaseApp.getApps().isEmpty()) {
                 FirebaseApp.initializeApp(options);
             }
-            db = FirestoreClient.getFirestore(); // Initialize Firestore here
+            db = FirebaseInitialization.getInstance();	//instance held in database
+
         } catch (IOException ex) {
             handleFirebaseError("Firebase initialization failed", ex);
         }

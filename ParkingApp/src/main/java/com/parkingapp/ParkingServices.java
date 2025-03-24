@@ -31,24 +31,22 @@ public class ParkingServices {
     //creation of new parking lot
     public void addParkingLot(String parkingLotId) {
     	ParkingLot create = new ParkingLot(parkingLotId);
-    	
-    	//storeAddLotInfoInFirestore();
     	System.out.println(create.getId());
     	System.out.println(create);
-    	//Add REST functions for database
+    	//Add functions for database
     	storeAddLotInfoInFirestore(create);
     	
     }
     // Method to enable a parking LOT
     public void enableParkingLot(ParkingLot lot) {
         lot.enable();
-        //Add REST function to enable all parkingspots in lot	
+        //Add function to enable all parkingspots in lot	
         storeEnabledLotInfoInFirestore(lot);
     }
     // Method to disable a parking LOT
     public void disableParkingLot(ParkingLot lot) {
         lot.disable();
-      //Add REST function to enable all parkingspots in lot
+      //Add function to enable all parkingspots in lot
         storeEnabledLotInfoInFirestore(lot);
 
     }

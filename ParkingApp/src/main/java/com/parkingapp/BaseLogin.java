@@ -5,6 +5,8 @@ import com.google.cloud.firestore.QueryDocumentSnapshot;
 import com.google.cloud.firestore.QuerySnapshot;
 import com.google.firebase.cloud.FirestoreClient;
 
+import services.FirebaseInitialization;
+
 import javax.swing.*;
 import java.awt.*;
 import java.io.BufferedReader;
@@ -196,7 +198,8 @@ public abstract class BaseLogin extends JFrame {
             }
 
             private boolean verifyAdminCredentials(String userId, String password) {
-                Firestore db = FirestoreClient.getFirestore();
+                Firestore db = FirebaseInitialization.getInstance();	//instance held in database
+
 
                 try {
                     QuerySnapshot snapshot = db.collection("admin_accounts").get().get();
