@@ -25,8 +25,7 @@ public class UserLogin extends JFrame { // Extending JFrame
 
     // Replace this with your own API key
     private static final String API_KEY =
-            "
-AIzaSyAeBBsBEyflDmEmfjwiX7rm0FuILDflss4"; //  API key usage
+            "AIzaSyAeBBsBEyflDmEmfjwiX7rm0FuILDflss4"; // API key usage
 
     private static final String SIGN_IN_URL =
             "https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=" + API_KEY;
