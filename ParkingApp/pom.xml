@@ -3,7 +3,6 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
                              http://maven.apache.org/xsd/maven-4.0.0.xsd">
-
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>main</groupId>
@@ -20,48 +19,37 @@
     </properties>
 
     <dependencies>
-        <!-- Firebase Admin SDK for server-side admin tasks -->
         <dependency>
             <groupId>com.google.firebase</groupId>
             <artifactId>firebase-admin</artifactId>
             <version>9.1.1</version>
         </dependency>
-        
-        
-        <!-- Spring Boot Starter (if using Spring Boot) -->
-	    <dependency>
-	        <groupId>org.springframework.boot</groupId>
-	        <artifactId>spring-boot-starter</artifactId>
-	        <version>3.2.1</version> <!-- Check the latest version -->
-	    </dependency>
-	    
-	    <!-- Spring Context (if not using Spring Boot) -->
-	    <dependency>
-	        <groupId>org.springframework</groupId>
-	        <artifactId>spring-context</artifactId>
-	        <version>6.1.2</version> <!-- Check the latest version -->
-	    </dependency>
-	        
-        <!-- dependency to implement firebase db store -->
-        
-        <!-- <dependency>
-            <groupId>com.google.cloud</groupId>
-            <artifactId>google-cloud-firestore</artifactId>
-            <version>2.16.0</version>  
-        </dependency> -->
 
-        <!-- org.json for JSON parsing -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter</artifactId>
+            <version>3.2.1</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-context</artifactId>
+            <version>6.1.2</version>
+        </dependency>
+
         <dependency>
             <groupId>org.json</groupId>
             <artifactId>json</artifactId>
-            <version>20210307</version>
+            <version>20240303</version>
         </dependency>
+
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <version>4.13.2</version>
             <scope>test</scope>
         </dependency>
+
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
@@ -71,20 +59,58 @@
     </dependencies>
 
     <build>
-        <pluginManagement>
-            <plugins>
-                <!-- Ensures we're using Java 14 for compilation -->
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-compiler-plugin</artifactId>
-                    <version>3.8.1</version>
-                    <configuration>
-                        <source>14</source>
-                        <target>14</target>
-                    </configuration>
-                </plugin>
-            </plugins>
-        </pluginManagement>
+        <plugins>
+            <!-- Maven Jar Plugin: creates a standard JAR with a manifest entry -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.3.0</version>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <mainClass>com.parkingapp.UserLogin</mainClass>
+                        </manifest>
+                    </archive>
+                </configuration>
+            </plugin>
+
+            <!-- Maven Shade Plugin: creates an uber-jar, excludes signature files,
+                 and generates a dependency-reduced POM -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.5.1</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <!-- Create a dependency reduced POM -->
+                            <createDependencyReducedPom>true</createDependencyReducedPom>
+                            <!-- Exclude signature files to avoid runtime errors -->
+                            <filters>
+                                <filter>
+                                    <artifact>*:*</artifact>
+                                    <excludes>
+                                        <exclude>META-INF/*.SF</exclude>
+                                        <exclude>META-INF/*.DSA</exclude>
+                                        <exclude>META-INF/*.RSA</exclude>
+                                    </excludes>
+                                </filter>
+                            </filters>
+                            <!-- Configure the manifest transformer with the main class -->
+                            <transformers>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                    <mainClass>com.parkingapp.UserLogin</mainClass>
+                                </transformer>
+                            </transformers>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
     </build>
 
 </project>
