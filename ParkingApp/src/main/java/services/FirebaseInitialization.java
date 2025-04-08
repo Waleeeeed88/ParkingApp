@@ -19,7 +19,6 @@ public class FirebaseInitialization {
 
     // Private constructor prevents instantiation from outside
     private FirebaseInitialization() {
-        // You could also do any other initialization here if needed
     }
 
     /**

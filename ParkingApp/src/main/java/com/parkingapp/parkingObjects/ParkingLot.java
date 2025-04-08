@@ -23,7 +23,7 @@ public class ParkingLot implements ParkingComponent {
      }
  }
 
- public List<ParkingComponent> getParkingSpaces() {
+ public List<ParkingComponent> getParkingSpaces() {	
      return parkingSpaces;
  }
 
