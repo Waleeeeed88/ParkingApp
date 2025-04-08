@@ -76,6 +76,11 @@ public class PaymentRates {
      * @throws IllegalArgumentException if the user type is not recognized
      */
     public static RateCalculationStrategy getStrategy(UserLogin.UserType userType) {
+    	
+    	if (userType == null) {
+            // Or any custom message you like
+            throw new IllegalArgumentException("User type cannot be null.");
+        }
         switch (userType) {
             case STUDENT:
                 return new StudentRateStrategy();
