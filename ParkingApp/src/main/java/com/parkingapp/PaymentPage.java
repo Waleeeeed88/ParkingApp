@@ -157,9 +157,7 @@ public class PaymentPage extends JDialog {
                     double newBalance = get();  // If no exception, payment succeeded
 
                     // Refresh BookingPage's balance if the parent is BookingPage
-                    if (getParent() instanceof BookingPage) {
-                        ((BookingPage) getParent()).loadUserBalance();
-                    }
+                    getParent();
 
                     // Notify callback that payment was successful
                     if (callback != null) {
