@@ -1,9 +1,6 @@
 package com.parkingapp.GUI;
 
 import com.parkingapp.BookingPage; // Need reference to logic class
-import com.parkingapp.BookingTimelineDialog;
-import com.parkingapp.PaymentPage; // Needed to open payment dialog
-import com.parkingapp.UserLogin; // Needed for UserType enum
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
