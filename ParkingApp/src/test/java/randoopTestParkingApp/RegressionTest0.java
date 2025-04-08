@@ -17,8 +17,8 @@ public class RegressionTest0 {
         // The following exception was thrown during execution in test generation
         try {
             double double2 = com.parkingapp.PaymentRates.calculateCost(userType0, (long) (short) 100);
-            org.junit.Assert.fail("Expected exception of type java.lang.NullPointerException; message: Cannot invoke \"com.parkingapp.UserLogin$UserType.ordinal()\" because \"userType\" is null");
-        } catch (java.lang.NullPointerException e) {
+            org.junit.Assert.fail("Expected exception of type java.lang.IllegalArgumentException; message: User type cannot be null.");
+        } catch (java.lang.IllegalArgumentException e) {
         // Expected exception.
         }
     }
@@ -31,8 +31,8 @@ public class RegressionTest0 {
         // The following exception was thrown during execution in test generation
         try {
             com.parkingapp.PaymentRates.RateCalculationStrategy rateCalculationStrategy1 = com.parkingapp.PaymentRates.getStrategy(userType0);
-            org.junit.Assert.fail("Expected exception of type java.lang.NullPointerException; message: Cannot invoke \"com.parkingapp.UserLogin$UserType.ordinal()\" because \"userType\" is null");
-        } catch (java.lang.NullPointerException e) {
+            org.junit.Assert.fail("Expected exception of type java.lang.IllegalArgumentException; message: User type cannot be null.");
+        } catch (java.lang.IllegalArgumentException e) {
         // Expected exception.
         }
     }
@@ -45,8 +45,8 @@ public class RegressionTest0 {
         // The following exception was thrown during execution in test generation
         try {
             double double2 = com.parkingapp.PaymentRates.calculateCost(userType0, (long) (short) -1);
-            org.junit.Assert.fail("Expected exception of type java.lang.NullPointerException; message: Cannot invoke \"com.parkingapp.UserLogin$UserType.ordinal()\" because \"userType\" is null");
-        } catch (java.lang.NullPointerException e) {
+            org.junit.Assert.fail("Expected exception of type java.lang.IllegalArgumentException; message: User type cannot be null.");
+        } catch (java.lang.IllegalArgumentException e) {
         // Expected exception.
         }
     }
@@ -69,8 +69,8 @@ public class RegressionTest0 {
         // The following exception was thrown during execution in test generation
         try {
             double double2 = com.parkingapp.PaymentRates.calculateCost(userType0, (-1L));
-            org.junit.Assert.fail("Expected exception of type java.lang.NullPointerException; message: Cannot invoke \"com.parkingapp.UserLogin$UserType.ordinal()\" because \"userType\" is null");
-        } catch (java.lang.NullPointerException e) {
+            org.junit.Assert.fail("Expected exception of type java.lang.IllegalArgumentException; message: User type cannot be null.");
+        } catch (java.lang.IllegalArgumentException e) {
         // Expected exception.
         }
     }
@@ -83,8 +83,8 @@ public class RegressionTest0 {
         // The following exception was thrown during execution in test generation
         try {
             double double2 = com.parkingapp.PaymentRates.calculateCost(userType0, (long) (byte) 1);
-            org.junit.Assert.fail("Expected exception of type java.lang.NullPointerException; message: Cannot invoke \"com.parkingapp.UserLogin$UserType.ordinal()\" because \"userType\" is null");
-        } catch (java.lang.NullPointerException e) {
+            org.junit.Assert.fail("Expected exception of type java.lang.IllegalArgumentException; message: User type cannot be null.");
+        } catch (java.lang.IllegalArgumentException e) {
         // Expected exception.
         }
     }
@@ -97,8 +97,8 @@ public class RegressionTest0 {
         // The following exception was thrown during execution in test generation
         try {
             double double2 = com.parkingapp.PaymentRates.calculateCost(userType0, (long) 10);
-            org.junit.Assert.fail("Expected exception of type java.lang.NullPointerException; message: Cannot invoke \"com.parkingapp.UserLogin$UserType.ordinal()\" because \"userType\" is null");
-        } catch (java.lang.NullPointerException e) {
+            org.junit.Assert.fail("Expected exception of type java.lang.IllegalArgumentException; message: User type cannot be null.");
+        } catch (java.lang.IllegalArgumentException e) {
         // Expected exception.
         }
     }
@@ -172,8 +172,8 @@ public class RegressionTest0 {
         // The following exception was thrown during execution in test generation
         try {
             double double2 = com.parkingapp.PaymentRates.calculateCost(userType0, (long) 1);
-            org.junit.Assert.fail("Expected exception of type java.lang.NullPointerException; message: Cannot invoke \"com.parkingapp.UserLogin$UserType.ordinal()\" because \"userType\" is null");
-        } catch (java.lang.NullPointerException e) {
+            org.junit.Assert.fail("Expected exception of type java.lang.IllegalArgumentException; message: User type cannot be null.");
+        } catch (java.lang.IllegalArgumentException e) {
         // Expected exception.
         }
     }
@@ -186,8 +186,8 @@ public class RegressionTest0 {
         // The following exception was thrown during execution in test generation
         try {
             double double2 = com.parkingapp.PaymentRates.calculateCost(userType0, 1L);
-            org.junit.Assert.fail("Expected exception of type java.lang.NullPointerException; message: Cannot invoke \"com.parkingapp.UserLogin$UserType.ordinal()\" because \"userType\" is null");
-        } catch (java.lang.NullPointerException e) {
+            org.junit.Assert.fail("Expected exception of type java.lang.IllegalArgumentException; message: User type cannot be null.");
+        } catch (java.lang.IllegalArgumentException e) {
         // Expected exception.
         }
     }
@@ -200,8 +200,8 @@ public class RegressionTest0 {
         // The following exception was thrown during execution in test generation
         try {
             double double2 = com.parkingapp.PaymentRates.calculateCost(userType0, 100L);
-            org.junit.Assert.fail("Expected exception of type java.lang.NullPointerException; message: Cannot invoke \"com.parkingapp.UserLogin$UserType.ordinal()\" because \"userType\" is null");
-        } catch (java.lang.NullPointerException e) {
+            org.junit.Assert.fail("Expected exception of type java.lang.IllegalArgumentException; message: User type cannot be null.");
+        } catch (java.lang.IllegalArgumentException e) {
         // Expected exception.
         }
     }
@@ -214,8 +214,8 @@ public class RegressionTest0 {
         // The following exception was thrown during execution in test generation
         try {
             double double2 = com.parkingapp.PaymentRates.calculateCost(userType0, 0L);
-            org.junit.Assert.fail("Expected exception of type java.lang.NullPointerException; message: Cannot invoke \"com.parkingapp.UserLogin$UserType.ordinal()\" because \"userType\" is null");
-        } catch (java.lang.NullPointerException e) {
+            org.junit.Assert.fail("Expected exception of type java.lang.IllegalArgumentException; message: User type cannot be null.");
+        } catch (java.lang.IllegalArgumentException e) {
         // Expected exception.
         }
     }
@@ -279,8 +279,8 @@ public class RegressionTest0 {
         // The following exception was thrown during execution in test generation
         try {
             double double2 = com.parkingapp.PaymentRates.calculateCost(userType0, (long) (byte) 10);
-            org.junit.Assert.fail("Expected exception of type java.lang.NullPointerException; message: Cannot invoke \"com.parkingapp.UserLogin$UserType.ordinal()\" because \"userType\" is null");
-        } catch (java.lang.NullPointerException e) {
+            org.junit.Assert.fail("Expected exception of type java.lang.IllegalArgumentException; message: User type cannot be null.");
+        } catch (java.lang.IllegalArgumentException e) {
         // Expected exception.
         }
     }
@@ -293,8 +293,8 @@ public class RegressionTest0 {
         // The following exception was thrown during execution in test generation
         try {
             double double2 = com.parkingapp.PaymentRates.calculateCost(userType0, (long) (-1));
-            org.junit.Assert.fail("Expected exception of type java.lang.NullPointerException; message: Cannot invoke \"com.parkingapp.UserLogin$UserType.ordinal()\" because \"userType\" is null");
-        } catch (java.lang.NullPointerException e) {
+            org.junit.Assert.fail("Expected exception of type java.lang.IllegalArgumentException; message: User type cannot be null.");
+        } catch (java.lang.IllegalArgumentException e) {
         // Expected exception.
         }
     }
@@ -307,8 +307,8 @@ public class RegressionTest0 {
         // The following exception was thrown during execution in test generation
         try {
             double double2 = com.parkingapp.PaymentRates.calculateCost(userType0, (long) 'a');
-            org.junit.Assert.fail("Expected exception of type java.lang.NullPointerException; message: Cannot invoke \"com.parkingapp.UserLogin$UserType.ordinal()\" because \"userType\" is null");
-        } catch (java.lang.NullPointerException e) {
+            org.junit.Assert.fail("Expected exception of type java.lang.IllegalArgumentException; message: User type cannot be null.");
+        } catch (java.lang.IllegalArgumentException e) {
         // Expected exception.
         }
     }
@@ -340,8 +340,8 @@ public class RegressionTest0 {
         // The following exception was thrown during execution in test generation
         try {
             double double2 = com.parkingapp.PaymentRates.calculateCost(userType0, (long) (short) 1);
-            org.junit.Assert.fail("Expected exception of type java.lang.NullPointerException; message: Cannot invoke \"com.parkingapp.UserLogin$UserType.ordinal()\" because \"userType\" is null");
-        } catch (java.lang.NullPointerException e) {
+            org.junit.Assert.fail("Expected exception of type java.lang.IllegalArgumentException; message: User type cannot be null.");
+        } catch (java.lang.IllegalArgumentException e) {
         // Expected exception.
         }
     }
@@ -564,8 +564,8 @@ public class RegressionTest0 {
         // The following exception was thrown during execution in test generation
         try {
             double double2 = com.parkingapp.PaymentRates.calculateCost(userType0, 10L);
-            org.junit.Assert.fail("Expected exception of type java.lang.NullPointerException; message: Cannot invoke \"com.parkingapp.UserLogin$UserType.ordinal()\" because \"userType\" is null");
-        } catch (java.lang.NullPointerException e) {
+            org.junit.Assert.fail("Expected exception of type java.lang.IllegalArgumentException; message: User type cannot be null.");
+        } catch (java.lang.IllegalArgumentException e) {
         // Expected exception.
         }
     }
@@ -578,8 +578,8 @@ public class RegressionTest0 {
         // The following exception was thrown during execution in test generation
         try {
             double double2 = com.parkingapp.PaymentRates.calculateCost(userType0, (long) (byte) 100);
-            org.junit.Assert.fail("Expected exception of type java.lang.NullPointerException; message: Cannot invoke \"com.parkingapp.UserLogin$UserType.ordinal()\" because \"userType\" is null");
-        } catch (java.lang.NullPointerException e) {
+            org.junit.Assert.fail("Expected exception of type java.lang.IllegalArgumentException; message: User type cannot be null.");
+        } catch (java.lang.IllegalArgumentException e) {
         // Expected exception.
         }
     }
@@ -687,8 +687,8 @@ public class RegressionTest0 {
         // The following exception was thrown during execution in test generation
         try {
             double double2 = com.parkingapp.PaymentRates.calculateCost(userType0, (long) ' ');
-            org.junit.Assert.fail("Expected exception of type java.lang.NullPointerException; message: Cannot invoke \"com.parkingapp.UserLogin$UserType.ordinal()\" because \"userType\" is null");
-        } catch (java.lang.NullPointerException e) {
+            org.junit.Assert.fail("Expected exception of type java.lang.IllegalArgumentException; message: User type cannot be null.");
+        } catch (java.lang.IllegalArgumentException e) {
         // Expected exception.
         }
     }
@@ -720,8 +720,8 @@ public class RegressionTest0 {
         // The following exception was thrown during execution in test generation
         try {
             double double2 = com.parkingapp.PaymentRates.calculateCost(userType0, (long) 100);
-            org.junit.Assert.fail("Expected exception of type java.lang.NullPointerException; message: Cannot invoke \"com.parkingapp.UserLogin$UserType.ordinal()\" because \"userType\" is null");
-        } catch (java.lang.NullPointerException e) {
+            org.junit.Assert.fail("Expected exception of type java.lang.IllegalArgumentException; message: User type cannot be null.");
+        } catch (java.lang.IllegalArgumentException e) {
         // Expected exception.
         }
     }
@@ -747,8 +747,8 @@ public class RegressionTest0 {
         // The following exception was thrown during execution in test generation
         try {
             double double2 = com.parkingapp.PaymentRates.calculateCost(userType0, (long) (byte) -1);
-            org.junit.Assert.fail("Expected exception of type java.lang.NullPointerException; message: Cannot invoke \"com.parkingapp.UserLogin$UserType.ordinal()\" because \"userType\" is null");
-        } catch (java.lang.NullPointerException e) {
+            org.junit.Assert.fail("Expected exception of type java.lang.IllegalArgumentException; message: User type cannot be null.");
+        } catch (java.lang.IllegalArgumentException e) {
         // Expected exception.
         }
     }
@@ -802,8 +802,8 @@ public class RegressionTest0 {
         // The following exception was thrown during execution in test generation
         try {
             double double2 = com.parkingapp.PaymentRates.calculateCost(userType0, (long) '#');
-            org.junit.Assert.fail("Expected exception of type java.lang.NullPointerException; message: Cannot invoke \"com.parkingapp.UserLogin$UserType.ordinal()\" because \"userType\" is null");
-        } catch (java.lang.NullPointerException e) {
+            org.junit.Assert.fail("Expected exception of type java.lang.IllegalArgumentException; message: User type cannot be null.");
+        } catch (java.lang.IllegalArgumentException e) {
         // Expected exception.
         }
     }
@@ -983,8 +983,8 @@ public class RegressionTest0 {
         // The following exception was thrown during execution in test generation
         try {
             double double2 = com.parkingapp.PaymentRates.calculateCost(userType0, (long) 0);
-            org.junit.Assert.fail("Expected exception of type java.lang.NullPointerException; message: Cannot invoke \"com.parkingapp.UserLogin$UserType.ordinal()\" because \"userType\" is null");
-        } catch (java.lang.NullPointerException e) {
+            org.junit.Assert.fail("Expected exception of type java.lang.IllegalArgumentException; message: User type cannot be null.");
+        } catch (java.lang.IllegalArgumentException e) {
         // Expected exception.
         }
     }
@@ -1141,8 +1141,8 @@ public class RegressionTest0 {
         // The following exception was thrown during execution in test generation
         try {
             double double2 = com.parkingapp.PaymentRates.calculateCost(userType0, (long) (short) 0);
-            org.junit.Assert.fail("Expected exception of type java.lang.NullPointerException; message: Cannot invoke \"com.parkingapp.UserLogin$UserType.ordinal()\" because \"userType\" is null");
-        } catch (java.lang.NullPointerException e) {
+            org.junit.Assert.fail("Expected exception of type java.lang.IllegalArgumentException; message: User type cannot be null.");
+        } catch (java.lang.IllegalArgumentException e) {
         // Expected exception.
         }
     }
@@ -2013,8 +2013,8 @@ public class RegressionTest0 {
         // The following exception was thrown during execution in test generation
         try {
             double double2 = com.parkingapp.PaymentRates.calculateCost(userType0, (long) (short) 10);
-            org.junit.Assert.fail("Expected exception of type java.lang.NullPointerException; message: Cannot invoke \"com.parkingapp.UserLogin$UserType.ordinal()\" because \"userType\" is null");
-        } catch (java.lang.NullPointerException e) {
+            org.junit.Assert.fail("Expected exception of type java.lang.IllegalArgumentException; message: User type cannot be null.");
+        } catch (java.lang.IllegalArgumentException e) {
         // Expected exception.
         }
     }
@@ -2552,8 +2552,8 @@ public class RegressionTest0 {
         // The following exception was thrown during execution in test generation
         try {
             double double2 = com.parkingapp.PaymentRates.calculateCost(userType0, (long) '4');
-            org.junit.Assert.fail("Expected exception of type java.lang.NullPointerException; message: Cannot invoke \"com.parkingapp.UserLogin$UserType.ordinal()\" because \"userType\" is null");
-        } catch (java.lang.NullPointerException e) {
+            org.junit.Assert.fail("Expected exception of type java.lang.IllegalArgumentException; message: User type cannot be null.");
+        } catch (java.lang.IllegalArgumentException e) {
         // Expected exception.
         }
     }

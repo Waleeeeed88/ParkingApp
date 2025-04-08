@@ -96,6 +96,28 @@
                 </executions>
             </plugin>
             
+            <plugin>
+  				<groupId>org.apache.maven.plugins</groupId>
+  				<artifactId>maven-surefire-plugin</artifactId>
+  				<version>3.0.0-M7</version>
+  				<configuration>
+    				<includes>
+      					<include>**/*Test*.java</include>
+      					<include>**/*Tests.java</include>
+      					<include>**/*Test.java</include>
+      					<include>**/RegressionTest*.java</include>
+   				 	</includes>
+    			<useSystemClassLoader>true</useSystemClassLoader>
+  				</configuration>
+  			<dependencies>
+    	<dependency>
+      			<groupId>org.junit.vintage</groupId>
+      			<artifactId>junit-vintage-engine</artifactId>
+      			<version>5.8.1</version>
+    			</dependency>
+  			</dependencies>
+			</plugin>
+
             <!-- Maven Shade Plugin: creates an uber-jar, excludes signature files,
                  and generates a dependency-reduced POM -->
             <plugin>
@@ -132,6 +154,7 @@
                     </execution>
                 </executions>
             </plugin>
+            
         </plugins>
     </build>
 
