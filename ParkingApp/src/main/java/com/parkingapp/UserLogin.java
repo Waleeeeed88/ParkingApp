@@ -160,7 +160,7 @@ public class UserLogin { // No longer extends JFrame
      * Saves the user's UID to preferences for session management.
      * @param uid The user's unique ID.
      */
-    private void saveUserSession(String uid) {
+    public void saveUserSession(String uid) {
         Preferences prefs = Preferences.userNodeForPackage(UserLogin.class);
         prefs.put("user_uid", uid);
         System.out.println("UID saved to preferences: " + uid);
