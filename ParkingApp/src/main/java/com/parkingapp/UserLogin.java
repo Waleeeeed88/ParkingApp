@@ -182,7 +182,7 @@ public class UserLogin { // No longer extends JFrame
         // Ensure this runs on the Event Dispatch Thread if it modifies Swing components directly
         // SwingUtilities.invokeLater(() -> { // Often needed if BookingPageGUI constructor does heavy UI setup
         System.out.println("Creating BookingPage logic...");
-        com.parkingapp.BookingPage bookingLogic = new com.parkingapp.BookingPage(); // Logic class
+        com.parkingapp.GUI.BookingPage bookingLogic = new com.parkingapp.GUI.BookingPage(); // Logic class
 
         System.out.println("Creating BookingPageGUI...");
         // Instantiate the GUI, passing the logic instance. Assume GUI shows itself.

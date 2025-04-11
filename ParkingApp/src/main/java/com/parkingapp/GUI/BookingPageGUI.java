@@ -1,6 +1,6 @@
 package com.parkingapp.GUI;
 
-import com.parkingapp.BookingPage; // Need reference to logic class
+import com.parkingapp.GUI.BookingPage; // Need reference to logic class
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
