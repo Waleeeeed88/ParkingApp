@@ -122,7 +122,7 @@ public class PaymentPage extends JDialog {
             @Override
             protected Double doInBackground() throws Exception {
                 // 1) Get the user's UID from Preferences
-                Preferences prefs = Preferences.userNodeForPackage(BookingPage.class);
+                Preferences prefs = Preferences.userNodeForPackage(UserLogin.class);
                 String uid = prefs.get("user_uid", null);
                 if (uid == null) {
                     throw new Exception("User not logged in.");
