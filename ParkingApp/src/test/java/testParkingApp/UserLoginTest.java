@@ -19,7 +19,6 @@ class UserLoginTest {
      * ------------------------------------------------------------------ */
     static class StubUserLoginService extends services.UserLoginService {
 
-        /** JSON string to be returned by sign‑in / sign‑up. */
         private final String cannedResponse;
 
         StubUserLoginService(String json) { this.cannedResponse = json; }
@@ -72,7 +71,6 @@ class UserLoginTest {
                 "UID should be stored in java.util.prefs");
     }
 
-    /** Happy‑path: performLogin() receives an idToken and should store the UID. */
     @Test
     void performLoginSuccessStoresUid() throws Exception {
 
@@ -96,7 +94,6 @@ class UserLoginTest {
                 "Successful login should write UID to preferences");
     }
 
-    /** Error path: backend returns a Firebase‑style error JSON. */
     @Test
     void performLoginFailureDoesNotStoreUid() throws Exception {
 
@@ -116,7 +113,6 @@ class UserLoginTest {
                 "UID should not be written when login fails");
     }
 
-    /** Happy‑path registration flow. */
     @Test
     void performRegistrationSuccessStoresUid() throws Exception {
 
