@@ -86,7 +86,7 @@ public class SuperAdminDashboardGUI extends JFrame {
     private void openParkingServices() {
         dispose();
         // Assuming AdminParkingServices is the GUI for parking management.
-        new com.parkingapp.AdminParkingServices(true);
+        new com.parkingapp.GUI.AdminParkingServices(true);
     }
 
     // Gathers input from the user, uses the logic class to generate and save an admin account.
