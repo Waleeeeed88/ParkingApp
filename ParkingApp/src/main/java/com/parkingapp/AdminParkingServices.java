@@ -252,15 +252,17 @@ public class AdminParkingServices {
         // FIXED RETURN BUTTON FUNCTIONALITY
         returnButton.addActionListener(e -> {
             frame.dispose(); // Close current window
-
             if (isSuperManager) {
-                new SuperAdminDashboard(new ParkingServices(), new SuperAdminDashboard.AdminAccount("defaultAdmin", "defaultPassword"), isSuperManager).setVisible(true);
-
+                new com.parkingapp.GUI.SuperAdminDashboardGUI(
+                        new ParkingServices(),
+                        new SuperAdminDashboard.AdminAccount("defaultAdmin", "defaultPassword"),
+                        isSuperManager
+                ).setVisible(true);
             } else {
-
                 new BaseLogin.AdminManagementPanel().setVisible(true);
             }
         });
+
 
         // Update space selector when a parking lot is selected
         lotSelector.addActionListener(new ActionListener() {
