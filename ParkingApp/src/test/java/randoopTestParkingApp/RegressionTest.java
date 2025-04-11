@@ -2,7 +2,7 @@ package randoopTestParkingApp;
 
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
-import com.parkingapp.GUI.BookingPage;
+import com.parkingapp.PaymentRates;
 
 
 @RunWith(Suite.class)

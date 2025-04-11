@@ -2,8 +2,6 @@ package com.parkingapp;
 
 import java.util.Objects;
 
-import com.parkingapp.GUI.BookingPage;
-
 //The Booking class with both vehicleType, carBrand, and duration fields.
 public class Booking {
     private String space; // Combined "Lot - Space" identifier.
