@@ -141,6 +141,6 @@ public class SuperAdminDashboardGUI extends JFrame {
     // Logs out by returning to the management login screen.
     private void logout() {
         dispose();
-        SwingUtilities.invokeLater(() -> new com.parkingapp.BaseLogin.ManagementLogin().setVisible(true));
+        SwingUtilities.invokeLater(() -> new com.parkingapp.GUI.BaseLogin.ManagementLogin().setVisible(true));
     }
 }

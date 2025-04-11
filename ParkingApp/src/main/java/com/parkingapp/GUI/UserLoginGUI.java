@@ -1,6 +1,5 @@
 package com.parkingapp.GUI; // New package for GUI classes
 
-import com.parkingapp.BaseLogin; // Needed for Admin Login button action
 import com.parkingapp.UserLogin; // Needed for UserType enum and logic methods access
 
 import javax.swing.*;
