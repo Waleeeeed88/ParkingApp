@@ -1,6 +1,6 @@
 package com.parkingapp;
 
-import com.parkingapp.GUI.UserLoginGUI; // Import the GUI class
+import com.parkingapp.GUI.UserLoginGUI;// Import the GUI class
 import org.json.JSONObject; // Still needed to parse results from Service
 import services.UserLoginService;
 
@@ -161,7 +161,7 @@ public class UserLogin { // No longer extends JFrame
      * @param uid The user's unique ID.
      */
     public void saveUserSession(String uid) {
-        Preferences prefs = Preferences.userNodeForPackage(UserLogin.class);
+        Preferences prefs = Preferences.userNodeForPackage(com.parkingapp.GUI.BookingPage.class);
         prefs.put("user_uid", uid);
         System.out.println("UID saved to preferences: " + uid);
     }
