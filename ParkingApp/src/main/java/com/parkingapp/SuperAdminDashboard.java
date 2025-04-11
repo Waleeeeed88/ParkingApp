@@ -4,7 +4,7 @@ import com.google.api.core.ApiFuture;
 import com.google.cloud.firestore.*;
 import com.parkingapp.parkingObjects.ParkingServices;
 import services.FirebaseInitialization;
-
+import services.SuperAdminDashboardFirestore;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
@@ -13,6 +13,13 @@ import java.util.concurrent.ExecutionException;
 public class SuperAdminDashboard {
     private static final String COLLECTION_NAME = "admin_accounts";
 
+    private SuperAdminDashboardFirestore firestore;
+
+	 // Initialize it in the constructor or as needed
+	 public SuperAdminDashboard() {
+	     this.firestore = new SuperAdminDashboardFirestore();
+	 }
+	 
     // Generates a secure random password of given length.
     public String generateSecurePassword(int length) {
         String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%&*()-_?.";
@@ -39,29 +46,15 @@ public class SuperAdminDashboard {
         newAdmin.setPassword(generatedPassword);
         return newAdmin;
     }
-
+ 
     // Saves the admin account to Firebase Firestore.
-    public void saveAdminAccountToFirebase(AdminAccount adminAccount)
-            throws InterruptedException, ExecutionException {
-        Firestore db = FirebaseInitialization.getInstance();
-        DocumentReference docRef = db.collection(COLLECTION_NAME).document(adminAccount.getUserId());
-        AdminAccountData adminData = new AdminAccountData(adminAccount.getUserId(), adminAccount.getPassword());
-        ApiFuture<WriteResult> result = docRef.set(adminData);
-        result.get(); // Wait for operation completion.
+    public void saveAdminAccountToFirebase(AdminAccount adminAccount) throws InterruptedException, ExecutionException {
+        firestore.saveAdminAccountToFirebase(adminAccount);
     }
 
     // Retrieves existing admin accounts from Firebase Firestore.
     public List<String> fetchAdminAccounts() throws InterruptedException, ExecutionException {
-        Firestore db = FirebaseInitialization.getInstance();
-        List<String> accounts = new ArrayList<>();
-        ApiFuture<QuerySnapshot> future = db.collection(COLLECTION_NAME).get();
-        List<QueryDocumentSnapshot> documents = future.get().getDocuments();
-        for (QueryDocumentSnapshot document : documents) {
-            String username = document.getString("admin_user");
-            String password = document.getString("admin_password");
-            accounts.add("Username: " + username + ", Password: " + password);
-        }
-        return accounts;
+        return firestore.fetchAdminAccountsFromFirestore();
     }
 
     // --------------------------------------------------
