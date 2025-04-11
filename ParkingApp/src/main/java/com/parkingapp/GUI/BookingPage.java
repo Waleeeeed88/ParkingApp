@@ -3,7 +3,6 @@ package com.parkingapp.GUI;
 // Firestore and Firebase Admin imports
 import com.google.api.core.ApiFuture;
 import com.google.cloud.firestore.*;
-import com.parkingapp.PaymentPage;
 import com.parkingapp.PaymentRates;
 import com.parkingapp.UserLogin;
 import services.FirebaseInitialization; // Your custom initializer

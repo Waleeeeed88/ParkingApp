@@ -28,7 +28,7 @@ public class ParkingServices {
         lot.disable();
       //Add function to enable all parkingspots in lot
         ParkingServicesFirestore.storeEnabledLotInfoInFirestore(lot);
-
+ 
     }
     
     /*

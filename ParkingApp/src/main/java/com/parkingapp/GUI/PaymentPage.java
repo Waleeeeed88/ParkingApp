@@ -1,11 +1,13 @@
 // Last Update: 2021-10-14T21:00:00+00:00
-package com.parkingapp;
+package com.parkingapp.GUI;
 
 import services.FirebaseInitialization;
 import com.google.cloud.firestore.DocumentReference;
 import com.google.cloud.firestore.DocumentSnapshot;
 import com.google.cloud.firestore.Firestore;
 import com.google.cloud.firestore.SetOptions;
+import com.parkingapp.PaymentRates;
+import com.parkingapp.UserLogin;
 
 import javax.swing.*;
 import javax.swing.SwingWorker;
@@ -35,7 +37,7 @@ public class PaymentPage extends JDialog {
     private final PaymentCallback callback;
 
     // Firestore instance from FirebaseInitialization
-    private final Firestore db;
+    private final Firestore db = FirebaseInitialization.getInstance();;
 
     /**
      * Constructs a modal dialog for payment.
@@ -59,9 +61,6 @@ public class PaymentPage extends JDialog {
 
         // Compute cost using PaymentRates
         this.amountDue = PaymentRates.calculateCost(userType, durationInMinutes);
-
-        // Acquire Firestore from your singleton
-        db = FirebaseInitialization.getInstance();
 
         initializeUI();
     }

@@ -1,14 +1,10 @@
 package com.parkingapp;
 
-import com.google.api.core.ApiFuture;
-import com.google.cloud.firestore.*;
-import com.parkingapp.parkingObjects.ParkingServices;
-import services.FirebaseInitialization;
-import services.SuperAdminDashboardFirestore;
 import java.security.SecureRandom;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
+
+import services.SuperAdminDashboardFirestore;
 
 public class SuperAdminDashboard {
     private static final String COLLECTION_NAME = "admin_accounts";
