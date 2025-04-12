@@ -1,6 +1,6 @@
 package com.parkingapp;
 
-import com.parkingapp.GUI.UserLoginGUI;// Import the GUI class
+import com.parkingapp.GUI.UserLoginGUI; // Import the GUI class
 import org.json.JSONObject; // Still needed to parse results from Service
 import services.UserLoginService;
 
@@ -135,8 +135,17 @@ public class UserLogin { // No longer extends JFrame
                         String uid = jsonResponse.getString("localId");
                         saveUserSession(uid); // Save session locally
 
-                        // Navigate to the next page
-                        navigateToBookingPage();
+                        SwingUtilities.invokeLater(() ->
+                        JOptionPane.showMessageDialog(userLoginGUI,
+                            "Registration successful!  You can now login with your new credentials.",
+                            "Success",
+                            JOptionPane.INFORMATION_MESSAGE)
+                        );
+                        
+                        // Navigate back to the userLogin page
+                        if (userLoginGUI != null) {
+                            userLoginGUI.showPanel("login");   //navigate back to Login page
+                        }
 
                     } else if (jsonResponse.has("error")) {
                         // Registration Failed - Handle error JSON
@@ -161,7 +170,7 @@ public class UserLogin { // No longer extends JFrame
      * @param uid The user's unique ID.
      */
     public void saveUserSession(String uid) {
-        Preferences prefs = Preferences.userNodeForPackage(com.parkingapp.GUI.BookingPage.class);
+        Preferences prefs = Preferences.userNodeForPackage(UserLogin.class);
         prefs.put("user_uid", uid);
         System.out.println("UID saved to preferences: " + uid);
     }
