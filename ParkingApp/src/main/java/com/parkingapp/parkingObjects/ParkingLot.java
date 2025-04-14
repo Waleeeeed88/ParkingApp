@@ -9,12 +9,12 @@ public class ParkingLot implements ParkingComponent {
  private List<ParkingComponent> parkingSpaces;
  private boolean enabled;
 
- public ParkingLot(String id) {
-     this.id = id;
-     this.parkingSpaces = new ArrayList<>();
-     this.enabled = true;
-     initializeParkingSpaces();
- }
+    public ParkingLot(String id, boolean enabled) {
+        this.id = id;
+        this.enabled = enabled; // Use the provided enabled state
+        this.parkingSpaces = new ArrayList<>();
+        initializeParkingSpaces();
+    }
 
  private void initializeParkingSpaces() {
      for (int i = 1; i <= 100; i++) {
@@ -52,4 +52,9 @@ public class ParkingLot implements ParkingComponent {
  public boolean isEnabled() {
      return enabled;
  }
+    public ParkingLot(String id) {
+        this(id, true);
+    }
+
+
 }
