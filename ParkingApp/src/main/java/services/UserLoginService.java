@@ -19,11 +19,11 @@ public class UserLoginService {
     // API Key and URLs for Firebase Authentication
     // IMPORTANT: Keep your API_KEY secure. Consider loading it from a config file or environment variable.
     private static final String API_KEY =
-            "AIzaSyAeBBsBEyflDmEmfjwiX7rm0FuILDflss4"; // PASTE YOUR API KEY HERE
+            "Systemenv.get(API_KEY)"; // PASTE YOUR API KEY HERE
     private static final String SIGN_IN_URL =
-            "https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=" + API_KEY;
+            "" + API_KEY;
     private static final String SIGN_UP_URL =
-            "https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=" + API_KEY;
+            "" + API_KEY;
 
     private Firestore db; // Firestore instance
 
