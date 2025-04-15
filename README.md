@@ -126,7 +126,3 @@ Prerequisites
     Harmandeep Arneja @HarmandeepArneja
     Bhavneet Kaur @bhavneetk20
     Syed Ali Raza Rizvi @aliriz71
-    
-License
-
-    This project is for educational purposes only and should not be shared publicly outside the course.
